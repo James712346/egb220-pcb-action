@@ -25,9 +25,11 @@ jobs:
       - name: Extract Text from Silk Screen
         run: |
           tesseract /tmp/package.png /tmp/package
-      - name: Check for "Team" 
+      - name: Output Text
         run: |
           cat /tmp/package.txt
+      - name: Check for "Team" 
+        run: |
           nl /tmp/package.txt | grep -i team
           if [ $? -ne 0 ]; then
             echo "Team not found"
