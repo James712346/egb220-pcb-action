@@ -14,7 +14,7 @@ jobs:
           sudo apt-get install -y gerbv imagemagick
       - name: Convert Silk Screen to PNG
         run: |
-          gerbv -x png -o /tmp/package.png PCBExport/GerberFiles/*.gbr -D 3000
+          gerbv -x png -o /tmp/package.png PCBExport/GerberFiles/silkscreen_top.gbr -D 3000
       - name: Install Tesseract OCR
         run: |
           sudo apt-get install -y tesseract-ocr
@@ -27,6 +27,7 @@ jobs:
           tesseract /tmp/package.png /tmp/package
       - name: Check for "Team" 
         run: |
+          cat /tmp/package.txt
           nl /tmp/package.txt | grep -i team
           if [ $? -ne 0 ]; then
             echo "Team not found"
