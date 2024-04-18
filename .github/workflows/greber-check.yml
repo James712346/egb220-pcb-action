@@ -25,7 +25,7 @@ jobs:
           sudo mv eng.traineddata /usr/share/tessdata
       - name: Extract Text from Silk Screen
         run: |
-          tesseract /tmp/package.png /tmp/package --dpi 1000
+          tesseract /tmp/package.png /tmp/package --dpi 1000 --psm 11 --oem 1
 
       - name: Push image to release
         uses: actions/upload-artifact@v2
