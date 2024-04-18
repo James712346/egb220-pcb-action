@@ -1,0 +1,24 @@
+{
+    "Header": {
+        "Comment": "All values are metric (mm)",
+        "CreationDate": "2024-04-15T09:59:35Z",
+        "GenerationSoftware": {
+            "Application": "EAGLE",
+            "Vendor": "Autodesk",
+            "Version": "9.6.2"
+        },
+        "Part": "Single"
+    },
+    "Overall": {
+        "BoardThickness": 1.57,
+        "LayerNumber": 2,
+        "Name": {
+            "ProjectId": "interface_circuit"
+        },
+        "Owner": "James Prince <n10421262@qut.edu.au>",
+        "Size": {
+            "X": 42.85,
+            "Y": 17.77
+        }
+    }
+}

@@ -1,0 +1,38 @@
+name: Greber Skilk Screen Test
+
+on: [push]
+
+jobs:
+  greber-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gerbv imagemagick
+      - name: Convert Silk Screen to PNG
+        run: |
+          gerbv -x png -o /tmp/package.png PCBExport/GerberFiles/*.gbr -D 3000
+      - name: Install Tesseract OCR
+        run: |
+          sudo apt-get install -y tesseract-ocr
+          wget https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata
+          mkdir -p /usr/share/tessdata
+          sudo mv eng.traineddata /usr/share/tessdata
+          export TESSDATA_PREFIX=/usr/share/tessdata
+      - name: Extract Text from Silk Screen
+        run: |
+          tesseract /tmp/package.png /tmp/package
+      - name: Check for "Team" 
+        run: |
+          nl /tmp/package.txt | grep -i team
+          if [ $? -ne 0 ]; then
+            echo "Team not found"
+            exit 1
+          fi
+      
+        
+        
+      
