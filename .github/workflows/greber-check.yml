@@ -16,7 +16,7 @@ jobs:
           sudo apt-get install -y gerbv
       - name: Convert Silk Screen to PNG
         run: |
-          gerbv -x png -o /tmp/package.png PCBExport/GerberFiles/silkscreen_top.gbr -D 2400
+          gerbv -x png -o /tmp/package.png PCBExport/GerberFiles/silkscreen_top.gbr -D 1000
       - name: Install Tesseract OCR
         run: |
           sudo apt-get install -y tesseract-ocr
@@ -25,7 +25,7 @@ jobs:
           sudo mv eng.traineddata /usr/share/tessdata
       - name: Extract Text from Silk Screen
         run: |
-          tesseract /tmp/package.png /tmp/package --dpi 2400
+          tesseract /tmp/package.png /tmp/package --dpi 1000
       - name: Output Text
         run: |
           cat /tmp/package.txt
