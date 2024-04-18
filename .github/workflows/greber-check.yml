@@ -26,6 +26,12 @@ jobs:
       - name: Extract Text from Silk Screen
         run: |
           tesseract /tmp/package.png /tmp/package --dpi 1000
+
+      - name: Push image to release
+        uses: actions/upload-artifact@v2
+        with:
+          name: package
+          path: /tmp/package.png
       - name: Output Text
         run: |
           cat /tmp/package.txt
