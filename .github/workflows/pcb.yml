@@ -19,9 +19,12 @@ jobs:
           echo "::set-output name=folders::$(find schematics -mindepth 1 -maxdepth 1 -type d | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')"
   
 
-  generate_gerber_files:
+  generate_librePCB_gerber_files:
     needs: setup_matrix
     runs-on: ubuntu-latest
+    container:
+      image: librepcb/librepcb-cli:0.1.5
+      options: --entrypoint /bin/bash
     strategy:
       matrix:
         folder: ${{fromJson(needs.setup_matrix.outputs.folders)}}
@@ -40,6 +43,27 @@ jobs:
         env:
           folder: ${{ matrix.folder }}
 
+      - name: Generate Gerber files for LibrePCB
+        if: steps.check_librepcb.outputs.is_librepcb == 'true'
+        run: |
+          echo "Generating Gerber files for $folder (LibrePCB)"
+          # Run commands to generate Gerber files for LibrePCB
+        env:
+          folder: ${{ matrix.folder }}
+
+  generates_kidcad_gerber_files:
+    needs: setup_matrix
+    runs-on: ubuntu-latest
+    container:
+      image: kicad/kicad:5.1.10
+      options: --entrypoint /bin/bash
+    strategy:
+      matrix:
+        folder: ${{fromJson(needs.setup_matrix.outputs.folders)}}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Check for KiCad project
         id: check_kicad
         run: |
@@ -50,12 +74,11 @@ jobs:
           fi
         env:
           folder: ${{ matrix.folder }}
-
-      - name: Generate Gerber files for LibrePCB
-        if: steps.check_librepcb.outputs.is_librepcb == 'true'
+      - name: Setup KiCad
+        if: steps.check_kicad.outputs.is_kicad == 'true'
         run: |
-          echo "Generating Gerber files for $folder (LibrePCB)"
-          # Run commands to generate Gerber files for LibrePCB
+          echo "Setting up KiCad for $folder"
+          
         env:
           folder: ${{ matrix.folder }}
 
@@ -65,4 +88,4 @@ jobs:
           echo "Generating Gerber files for $folder (KiCad)"
           # Run commands to generate Gerber files for KiCad
         env:
-          folder: ${{ matrix.folder }}
+          folder: ${{ matrix.folder }}q
