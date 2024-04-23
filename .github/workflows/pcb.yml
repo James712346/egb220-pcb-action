@@ -32,10 +32,10 @@ jobs:
       - name: Check for LibrePCB project
         id: check_librepcb
         run: |
-          if [ -f "$folder/*.lpp" ]; then
-            echo "::set-output name=is_librepcb::true"
+          if ls $folder/*.lpp 1> /dev/null 2>&1; then
+            echo "is_librepcb=true" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=is_librepcb::false"
+            echo "is_librepcb=false" >> $GITHUB_OUTPUT
           fi
         env:
           folder: ${{ matrix.folder }}
@@ -43,10 +43,10 @@ jobs:
       - name: Check for KiCad project
         id: check_kicad
         run: |
-          if [ -f "$folder/schematics.kicad_pcb" ]; then
-            echo "::set-output name=is_kicad::true"
+          if ls $folder/*.lpp 1> /dev/null 2>&1; then
+            echo "is_kicad=true" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=is_kicad::false"
+            echo "is_kicad=false" >> $GITHUB_OUTPUT
           fi
         env:
           folder: ${{ matrix.folder }}
