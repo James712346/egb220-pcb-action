@@ -1,0 +1,33 @@
+M48
+; #@! TF.GenerationSoftware,LibrePCB,LibrePCB,1.1.0
+; #@! TF.CreationDate,2024-04-23T21:30:37
+; #@! TF.ProjectId,interfaceboard,7d1f5418-6340-4453-96b2-d8471fb3e645,version_1
+; #@! TF.Part,Single
+; #@! TF.SameCoordinates
+; #@! TF.FileFunction,MixedPlating,1,2
+FMAT,2
+METRIC,TZ
+; #@! TA.AperFunction,Plated,PTH,ViaDrill
+T1C0.35
+; #@! TA.AperFunction,NonPlated,NPTH,MechanicalDrill
+T2C3.0
+%
+G90
+G05
+M71
+T1
+X36.83Y54.61
+X41.0Y43.0
+X30.0Y45.0
+X38.1Y46.99
+X41.91Y46.99
+X21.0Y53.0
+X46.99Y54.61
+X40.64Y46.99
+X26.67Y54.61
+X57.15Y54.61
+T2
+X26.67Y45.72
+X52.07Y45.72
+T0
+M30
