@@ -43,7 +43,7 @@ jobs:
       - name: Check for KiCad project
         id: check_kicad
         run: |
-          if ls $folder/*.lpp 1> /dev/null 2>&1; then
+          if ls $folder/*.kicad_pro 1> /dev/null 2>&1; then
             echo "is_kicad=true" >> $GITHUB_OUTPUT
           else
             echo "is_kicad=false" >> $GITHUB_OUTPUT
