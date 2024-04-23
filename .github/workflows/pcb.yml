@@ -48,7 +48,7 @@ jobs:
         run: |
           echo "Generating Gerber files for $folder (LibrePCB)"
           for project in $folder/*.lpp; do
-            librepcb-cli open-project $project --export-pcb-fabrication-data /tmp/$folder
+            librepcb-cli open-project $project --export-pcb-fabrication-data
           done
         env:
           folder: ${{ matrix.folder }}
