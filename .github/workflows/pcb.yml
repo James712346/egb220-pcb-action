@@ -31,7 +31,7 @@ jobs:
       - name: Check for LibrePCB project
         id: check_librepcb
         run: |
-          if [ -f "$folder/schematics.librepcb" ]; then
+          if [ -f "$folder/*.lpp" ]; then
             echo "::set-output name=is_librepcb::true"
           else
             echo "::set-output name=is_librepcb::false"
