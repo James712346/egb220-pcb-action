@@ -52,6 +52,16 @@ jobs:
           done
         env:
           folder: ${{ matrix.folder }}
+      - name: Install Gerbv and ImageMagick
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gerbv imagemagick
+      - name: Convert Profile to PNG
+        run: |
+          for project in $folder/output/*/gerber/*_OUTLINES.gbr; do
+            echo $project
+          done
+
 
   # generates_kidcad_gerber_files:
   #   needs: setup_matrix
