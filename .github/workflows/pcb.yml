@@ -23,7 +23,7 @@ jobs:
     needs: setup_matrix
     runs-on: ubuntu-latest
     container:
-      image: librepcb/librepcb-cli
+      image: librepcb/librepcb-cli:1.1.0
       options: --entrypoint /bin/bash
     strategy:
       matrix:
@@ -53,41 +53,41 @@ jobs:
         env:
           folder: ${{ matrix.folder }}
 
-  generates_kidcad_gerber_files:
-    needs: setup_matrix
-    runs-on: ubuntu-latest
-    container:
-      image: kicad/kicad:5.1.10
-      options: --entrypoint /bin/bash
-    strategy:
-      matrix:
-        folder: ${{fromJson(needs.setup_matrix.outputs.folders)}}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+  # generates_kidcad_gerber_files:
+  #   needs: setup_matrix
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: kicad/kicad:5.1.10
+  #     options: --entrypoint /bin/bash
+  #   strategy:
+  #     matrix:
+  #       folder: ${{fromJson(needs.setup_matrix.outputs.folders)}}
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
 
-      - name: Check for KiCad project
-        id: check_kicad
-        run: |
-          if ls $folder/*.kicad_pro 1> /dev/null 2>&1; then
-            echo "is_kicad=true" >> $GITHUB_OUTPUT
-          else
-            echo "is_kicad=false" >> $GITHUB_OUTPUT
-          fi
-        env:
-          folder: ${{ matrix.folder }}
-      - name: Setup KiCad
-        if: steps.check_kicad.outputs.is_kicad == 'true'
-        run: |
-          echo "Setting up KiCad for $folder"
+  #     - name: Check for KiCad project
+  #       id: check_kicad
+  #       run: |
+  #         if ls $folder/*.kicad_pro 1> /dev/null 2>&1; then
+  #           echo "is_kicad=true" >> $GITHUB_OUTPUT
+  #         else
+  #           echo "is_kicad=false" >> $GITHUB_OUTPUT
+  #         fi
+  #       env:
+  #         folder: ${{ matrix.folder }}
+  #     - name: Setup KiCad
+  #       if: steps.check_kicad.outputs.is_kicad == 'true'
+  #       run: |
+  #         echo "Setting up KiCad for $folder"
           
-        env:
-          folder: ${{ matrix.folder }}
+  #       env:
+  #         folder: ${{ matrix.folder }}
 
-      - name: Generate Gerber files for KiCad
-        if: steps.check_kicad.outputs.is_kicad == 'true'
-        run: |
-          echo "Generating Gerber files for $folder (KiCad)"
-          # Run commands to generate Gerber files for KiCad
-        env:
-          folder: ${{ matrix.folder }}q
+  #     - name: Generate Gerber files for KiCad
+  #       if: steps.check_kicad.outputs.is_kicad == 'true'
+  #       run: |
+  #         echo "Generating Gerber files for $folder (KiCad)"
+  #         # Run commands to generate Gerber files for KiCad
+  #       env:
+  #         folder: ${{ matrix.folder }}
