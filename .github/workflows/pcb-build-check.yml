@@ -1,8 +1,18 @@
-name: Greber Skilk Screen Test
+name: EGB220 PCB Submission Check & Build
 
 on: [push]
 
 jobs:
+  list-projects:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - id: set-matrix
+        run: |
+          echo "::set-output name=matrix::$(ls schematics/* | jq -R -s -c 'split("\n")[:-1]')"
+          
+  build-kicad:
+    if: github
   greber-check:
     runs-on: ubuntu-latest
     env:

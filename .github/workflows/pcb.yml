@@ -1,0 +1,67 @@
+name: PCB Gerber Generation
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  setup_matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      folders: ${{ steps.list_folders.outputs.folders }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: List project folders
+        id: list_folders
+        run: |
+          find schematics -mindepth 1 -maxdepth 1 -type d | sed 's|^\./||'
+
+  generate_gerber_files:
+    needs: setup_matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        folder: ${{fromJson(needs.setup_matrix.outputs.folders)}}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Check for LibrePCB project
+        id: check_librepcb
+        run: |
+          if [ -f "$folder/schematics.librepcb" ]; then
+            echo "::set-output name=is_librepcb::true"
+          else
+            echo "::set-output name=is_librepcb::false"
+          fi
+        env:
+          folder: ${{ matrix.folder }}
+
+      - name: Check for KiCad project
+        id: check_kicad
+        run: |
+          if [ -f "$folder/schematics.kicad_pcb" ]; then
+            echo "::set-output name=is_kicad::true"
+          else
+            echo "::set-output name=is_kicad::false"
+          fi
+        env:
+          folder: ${{ matrix.folder }}
+
+      - name: Generate Gerber files for LibrePCB
+        if: steps.check_librepcb.outputs.is_librepcb == 'true'
+        run: |
+          echo "Generating Gerber files for $folder (LibrePCB)"
+          # Run commands to generate Gerber files for LibrePCB
+        env:
+          folder: ${{ matrix.folder }}
+
+      - name: Generate Gerber files for KiCad
+        if: steps.check_kicad.outputs.is_kicad == 'true'
+        run: |
+          echo "Generating Gerber files for $folder (KiCad)"
+          # Run commands to generate Gerber files for KiCad
+        env:
+          folder: ${{ matrix.folder }}
