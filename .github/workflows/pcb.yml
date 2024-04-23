@@ -23,7 +23,7 @@ jobs:
     needs: setup_matrix
     runs-on: ubuntu-latest
     container:
-      image: librepcb/librepcb-cli:0.1.5
+      image: librepcb/librepcb-cli
       options: --entrypoint /bin/bash
     strategy:
       matrix:
