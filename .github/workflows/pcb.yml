@@ -76,6 +76,8 @@ jobs:
         run: |
           export x=${file%.lpp}
           echo "name=${x##*/}" >> $GITHUB_OUTPUT
+        env:
+          file: ${{ matrix.file }}
       - name: Add Artifacts
         uses: actions/upload-artifact@v4
         with:
