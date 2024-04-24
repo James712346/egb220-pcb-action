@@ -8,101 +8,114 @@ jobs:
   setup_matrix:
     runs-on: ubuntu-latest
     outputs:
-      folders: ${{ steps.list_folders.outputs.folders }}
+      librepcb: ${{ steps.list_folders.outputs.librepcb }}
+      kicad: ${{ steps.list_folders.outputs.kicad }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: List project folders
-        id: list_folders
+      - name: List project files for LibrePCB
+        id: list_librepcb_projects
         run: |
-          echo "::set-output name=folders::$(find schematics -mindepth 1 -maxdepth 1 -type d | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')"
-  
+          echo "::set-output name=librepcb::$(find schematics -mindepth 1 -maxdepth 2 -name "*.lpp" -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')"
+      - name: List project files for KiCad
+        id: list_kicad_projects
+        run: |
+          echo "::set-output name=kicad::$(find schematics -mindepth 1 -maxdepth 2 -name "*.kicad_pro" -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')"
 
   generate_librePCB_gerber_files:
     needs: setup_matrix
     runs-on: ubuntu-latest
+    if: ${{fromJson(needs.setup_matrix.outputs.librepcb)}} != []
     container:
       image: librepcb/librepcb-cli:1.1.0
       options: --entrypoint /bin/bash
     strategy:
       matrix:
-        folder: ${{fromJson(needs.setup_matrix.outputs.folders)}}
+        file: ${{fromJson(needs.setup_matrix.outputs.librepcb)}}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Check for LibrePCB project
-        id: check_librepcb
+      - name: Setup gerber Config
         run: |
-          if ls $folder/*.lpp 1> /dev/null 2>&1; then
-            echo "is_librepcb=true" >> $GITHUB_OUTPUT
-          else
-            echo "is_librepcb=false" >> $GITHUB_OUTPUT
-          fi
-        env:
-          folder: ${{ matrix.folder }}
+          echo "Setting up Gerber Config"
+          cat <<EOF > /tmp/gerber-config.lp
+          (job 7f79595f-d2db-4b76-9d48-8a69f045949b (name "Gerber/Excellon")
+            (type gerber_excellon)
+            (outlines (suffix ".gm1"))
+            (copper_top (suffix ".gtl"))
+            (copper_inner (suffix ".g{{CU_LAYER}}"))
+            (copper_bot (suffix ".gbl"))
+            (soldermask_top (suffix ".gts"))
+            (soldermask_bot (suffix ".gbs"))
+            (silkscreen_top (suffix ".gto"))
+            (silkscreen_bot (suffix ".gbo"))
+            (solderpaste_top (create true) (suffix ".gtp"))
+            (solderpaste_bot (create true) (suffix ".gbp"))
+            (drills (merge true)
+            (suffix_pth "_PTH.drl")
+            (suffix_npth "_NPTH.drl")
+            (suffix_merged ".drl")
+            (suffix_buried "_L{{START_NUMBER}}-L{{END_NUMBER}}.drl")
+            (g85_slots false)
+            )
+            (board default)
+            (base_path "/tmp/gerber/{{BOARD}}")
+          )
+          EOF
 
       - name: Generate Gerber files for LibrePCB
-        if: steps.check_librepcb.outputs.is_librepcb == 'true'
         run: |
-          echo "Generating Gerber files for $folder (LibrePCB)"
-          for project in $folder/*.lpp; do
-            librepcb-cli open-project $project --export-pcb-fabrication-data
-          done
+          echo "Generating Gerber files for $file (LibrePCB)"
+          librepcb-cli open-project $file --export-pcb-fabrication-data --pcb-fabrication-settings /tmp/gerber-config.lp
         env:
-          folder: ${{ matrix.folder }}
-      - name: Install Gerbv and ImageMagick
+          file: ${{ matrix.file }}
+      - name: Add Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gerber
+          path: /tmp/gerber
+          retention-days: 1
+      # - name: Install Gerbv and ImageMagick
+      #   run: |
+      #     apt-get update
+      #     apt-get install -y gerbv imagemagick
+      # - name: LIST Gerber files
+      #   run: |
+      #       for gerber in $folder/output/*/gerber/*; do
+      #         echo $gerber
+      #       done
+      # - name: Convert Profile to PNG
+      #   run: |
+      #     for gerber in $folder/output/*/gerber/*_OUTLINES.gbr; do
+      #       echo $gerber
+      #     done
+
+
+  generates_kidcad_gerber_files:
+    needs: setup_matrix
+    runs-on: ubuntu-latest
+    if: ${{fromJson(needs.setup_matrix.outputs.kicad)}} != []
+    container:
+      image: kicad/kicad:5.1.10
+      options: --entrypoint /bin/bash
+    strategy:
+      matrix:
+        file: ${{fromJson(needs.setup_matrix.outputs.kicad)}}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup KiCad
         run: |
-          apt-get update
-          apt-get install -y gerbv imagemagick
-      - name: LIST Gerber files
+          echo "Setting up KiCad for $folder"
+        env:
+          file: ${{ matrix.file }}
+
+      - name: Generate Gerber files for KiCad
         run: |
-            for gerber in $folder/output/*/gerber/*; do
-              echo $gerber
-            done
-      - name: Convert Profile to PNG
-        run: |
-          for gerber in $folder/output/*/gerber/*_OUTLINES.gbr; do
-            echo $gerber
-          done
-
-
-  # generates_kidcad_gerber_files:
-  #   needs: setup_matrix
-  #   runs-on: ubuntu-latest
-  #   container:
-  #     image: kicad/kicad:5.1.10
-  #     options: --entrypoint /bin/bash
-  #   strategy:
-  #     matrix:
-  #       folder: ${{fromJson(needs.setup_matrix.outputs.folders)}}
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v2
-
-  #     - name: Check for KiCad project
-  #       id: check_kicad
-  #       run: |
-  #         if ls $folder/*.kicad_pro 1> /dev/null 2>&1; then
-  #           echo "is_kicad=true" >> $GITHUB_OUTPUT
-  #         else
-  #           echo "is_kicad=false" >> $GITHUB_OUTPUT
-  #         fi
-  #       env:
-  #         folder: ${{ matrix.folder }}
-  #     - name: Setup KiCad
-  #       if: steps.check_kicad.outputs.is_kicad == 'true'
-  #       run: |
-  #         echo "Setting up KiCad for $folder"
-          
-  #       env:
-  #         folder: ${{ matrix.folder }}
-
-  #     - name: Generate Gerber files for KiCad
-  #       if: steps.check_kicad.outputs.is_kicad == 'true'
-  #       run: |
-  #         echo "Generating Gerber files for $folder (KiCad)"
-  #         # Run commands to generate Gerber files for KiCad
-  #       env:
-  #         folder: ${{ matrix.folder }}
+          echo "Generating Gerber files for $file (KiCad)"
+          # Run commands to generate Gerber files for KiCad
+        env:
+          file: ${{ matrix.file }}
