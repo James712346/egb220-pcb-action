@@ -8,8 +8,8 @@ jobs:
   setup_matrix:
     runs-on: ubuntu-latest
     outputs:
-      librepcb: ${{ steps.list_folders.outputs.librepcb }}
-      kicad: ${{ steps.list_folders.outputs.kicad }}
+      librepcb: ${{ steps.list_librepcb_projects.outputs.librepcb }}
+      kicad: ${{ steps.list_kicad_projects.outputs.kicad }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -17,11 +17,11 @@ jobs:
       - name: List project files for LibrePCB
         id: list_librepcb_projects
         run: |
-          echo "::set-output name=librepcb::$(find schematics -mindepth 1 -maxdepth 2 -name "*.lpp" -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')"
+          echo "librepcb=$(find schematics -mindepth 1 -maxdepth 2 -name "*.lpp" -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')" >> GITHUB_OUTPUT
       - name: List project files for KiCad
         id: list_kicad_projects
         run: |
-          echo "::set-output name=kicad::$(find schematics -mindepth 1 -maxdepth 2 -name "*.kicad_pro" -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')"
+          echo "kicad=$(find schematics -mindepth 1 -maxdepth 2 -name "*.kicad_pro" -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')" >> GITHUB_OUTPUT
 
   generate_librePCB_gerber_files:
     needs: setup_matrix
