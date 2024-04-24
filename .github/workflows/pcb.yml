@@ -17,11 +17,11 @@ jobs:
       - name: List project files for LibrePCB
         id: list_librepcb_projects
         run: |
-          echo "librepcb=$(find schematics -mindepth 1 -maxdepth 2 -name "*.lpp" -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')" >> GITHUB_OUTPUT
+          echo "librepcb=$(find schematics -mindepth 1 -maxdepth 2 -name '*.lpp' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')" >> GITHUB_OUTPUT
       - name: List project files for KiCad
         id: list_kicad_projects
         run: |
-          echo "kicad=$(find schematics -mindepth 1 -maxdepth 2 -name "*.kicad_pro" -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')" >> GITHUB_OUTPUT
+          echo "kicad=$(find schematics -mindepth 1 -maxdepth 2 -name '*.kicad_pro' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')" >> GITHUB_OUTPUT
 
   generate_librePCB_gerber_files:
     needs: setup_matrix
