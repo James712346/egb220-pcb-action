@@ -71,12 +71,19 @@ jobs:
           librepcb-cli open-project $file --export-pcb-fabrication-data --pcb-fabrication-settings /tmp/gerber-config.lp
         env:
           file: ${{ matrix.file }}
+      - name: Format Name
+        id: matrix_name
+        run: |
+          export x=${file%.lpp}
+          echo "name=${x##*/}" >> $GITHUB_OUTPUT
       - name: Add Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: gerber
+          name: ${{steps.matrix_name.outputs.name}}
           path: /tmp/gerber
           retention-days: 1
+        env:
+          file: ${{ matrix.file }}
       # - name: Install Gerbv and ImageMagick
       #   run: |
       #     apt-get update
@@ -119,3 +126,16 @@ jobs:
           # Run commands to generate Gerber files for KiCad
         env:
           file: ${{ matrix.file }}
+
+  gerber_jobs:
+    needs: [generate_librePCB_gerber_files, generates_kidcad_gerber_files]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Downloads All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/gerber
+      - name: List Gerber Files
+        run: |
+          ls -l /tmp/gerber
