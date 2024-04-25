@@ -205,7 +205,7 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     outputs:
-      silk_images: ${{ steps.extract_text.outputs.silk }}
+      silk_images: ${{ steps.get_imgur_urls.outputs.silk_images }}
       extracted_text: ${{ steps.extract_text.outputs.extracted_text }}
     env:
       TESSDATA_PREFIX: /usr/share/tessdata 
@@ -245,6 +245,7 @@ jobs:
           client_id: ${{ env.imgursecret }}
           path: /tmp/images/*/*.png
       - name: Set Silk Screen URLs as output
+        id: get_imgur_urls
         if: ${{ env.imgursecret != ''}}
         run: |
           json=$(jq -n '{}')
@@ -261,8 +262,7 @@ jobs:
             # Add project-filename: url to the JSON object
             json=$(jq --arg key "$project-$filename" --arg url "$url" '. + {($key): $url}' <<< "$json")
           done
-          echo $json
-          echo "silk_images=$IMGUR_URLS" >> $GITHUB_OUTPUT
+          echo "silk_images=$json" >> $GITHUB_OUTPUT
         env:
           IMGUR_URLS: ${{ steps.imgur_step.outputs.imgur_urls }}
       - name: No imgur secret
@@ -319,15 +319,15 @@ jobs:
             filename=${key##*-}
             echo "## Project: $project, Board: $filename" >> /tmp/README.md
             echo "### Size" >> /tmp/README.md
-            echo "Width: $(jq -r "."'"$key"'".width_mm" <<< $sizing) mm" >> /tmp/README.md
-            echo "Height: $(jq -r "."'"$key"'".height_mm" <<< $sizing) mm" >> /tmp/README.md
-            echo "Area: $(jq -r "."'"$key"'".area_mm" <<< $sizing) mm²" >> /tmp/README.md
-            echo "Price: $(jq -r "."'"$key"'".price" <<< $sizing)" >> /tmp/README.md
+            echo "Width: $(jq -r ".["'"$key"'"].width_mm" <<< $sizing) mm" >> /tmp/README.md
+            echo "Height: $(jq -r ".["'"$key"'"].height_mm" <<< $sizing) mm" >> /tmp/README.md
+            echo "Area: $(jq -r ".["'"$key"'"].area_mm" <<< $sizing) mm²" >> /tmp/README.md
+            echo "Price: $(jq -r ".["'"$key"'"].price" <<< $sizing)" >> /tmp/README.md
             echo "### Silk Screen" >> /tmp/README.md
-            echo "![Silk Screen for $key]($(jq -r "."'"$key"'"" <<< $silkscreen_urls))" >> /tmp/README.md
+            echo "![Silk Screen for $key]($(jq -r ".["'"$key"'"]" <<< $silkscreen_urls))" >> /tmp/README.md
             echo "#### Extracted Text" >> /tmp/README.md
             echo "```" >> /tmp/README.md
-            echo "$(jq -r "."'"$key"'"" <<< $extracted_text)" >> /tmp/README.md
+            echo "$(jq -r ".["'"$key"'"]" <<< $extracted_text)" >> /tmp/README.md
             echo "```" >> /tmp/README.md
           done
           cat /tmp/README.md
