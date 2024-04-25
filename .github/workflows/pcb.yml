@@ -153,7 +153,7 @@ jobs:
       - name: Install Gerbv and ImageMagick
         run: |
           sudo apt-get update
-          sudo apt-get install -y gerbv imagemagick
+          sudo apt-get install -y gerbv imagemagick libpng-dev
       - name: Generate PNGs of Profile
         run: |
           mkdir -p /tmp/images/
