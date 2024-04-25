@@ -108,7 +108,70 @@ jobs:
           retention-days: 1
         env:
           file: ${{ matrix.file }}
-
+    
+  librePCB_checks:
+    needs: setup_matrix
+    runs-on: ubuntu-latest
+    container:
+      image: librepcb/librepcb-cli:1.1.0
+      options: --entrypoint /bin/bash
+    strategy:
+      matrix:
+        file: ${{fromJson(needs.setup_matrix.outputs.librepcb)}}
+    steps:
+      - name: Checkout code
+        if: matrix.file != 'None'
+        uses: actions/checkout@v4
+      - name: Check for DRC Errors
+        if: matrix.file != 'None'
+        run: |
+          echo "Checking for DRC errors in $file"
+          librepcb-cli open-project $file --drc
+        env:
+          file: ${{ matrix.file }}
+      - name: Check for ERC Errors
+        if: matrix.file != 'None'
+        run: |
+          echo "Checking for ERC errors in $file"
+          librepcb-cli open-project $file --erc
+        env:
+          file: ${{ matrix.file }}
+      - name: Check for Netlist Errors
+        if: matrix.file != 'None'
+        run: |
+          echo "Checking for Netlist errors in $file"
+          librepcb-cli open-project $file --check-netlist
+        env:
+          file: ${{ matrix.file }}
+      - name: Check for Footprint Errors
+        if: matrix.file != 'None'
+        run: |
+          echo "Checking for Footprint errors in $file"
+          librepcb-cli open-project $file --check-footprints
+        env:
+          file: ${{ matrix.file }}
+      - name: Check for Symbol Errors
+        if: matrix.file != 'None'
+        run: |
+          echo "Checking for Symbol errors in $file"
+          librepcb-cli open-project $file --check-symbols
+        env:
+          file: ${{ matrix.file }}
+      - name: Check for Component Errors
+        if: matrix.file != 'None'
+        run: |
+          echo "Checking for Component errors in $file"
+          librepcb-cli open-project $file --check-components
+        env:
+          file: ${{ matrix.file }}
+      - name: Check for Project Errors
+        if: matrix.file != 'None'
+        run: |
+          echo "Checking for Project errors in $file"
+          librepcb-cli open-project $file --check-project
+        env:
+          file: ${{ matrix.file }}
+    
 
   generates_kidcad_gerber_files:
     needs: setup_matrix
@@ -285,7 +348,7 @@ jobs:
             filename=${filename%.png}
             echo "Extracting text from $project-$filename"
             tesseract $image /tmp/images/$project/$filename --dpi 1000 --psm 11 --oem 0
-            text=$(cat /tmp/images/$project/$filename.txt)
+            text=$(cat /tmp/images/$project/$filename.txt) | tr '\n\f' ' '
             json=$(jq --arg key "$project-$filename" --arg text "$text" '. + {($key): $text}' <<< "$json")
           done
           echo $json
@@ -343,7 +406,7 @@ jobs:
             echo "![Silk Screen]($(echo "$silkscreen_urls" | jq -r '.["'"$key"'"]'))" >> /tmp/README.md
             echo "#### Extracted Text" >> /tmp/README.md
             echo "```" >> /tmp/README.md
-            echo "<<EOF > $(echo "$extracted_text" | jq -r '.["'"$key"'"]') \n EOF" >> /tmp/README.md
+            echo $(echo "$extracted_text" | jq -r '.["'"$key"'"]') >> /tmp/README.md
             echo "```" >> /tmp/README.md
           done
           cat /tmp/README.md
