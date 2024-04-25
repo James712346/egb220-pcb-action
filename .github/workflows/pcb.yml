@@ -239,7 +239,7 @@ jobs:
           sudo mv eng.traineddata /usr/share/tessdata
       - name: Publish silkscreens on imgur
         id: imgur_step
-        uses: James712346/public-upload-to-imgur@v2.2.5
+        uses: devicons/public-upload-to-imgur@v2.2.2
         if: ${{ env.imgursecret != ''}}
         with:
           client_id: ${{ env.imgursecret }}
@@ -247,7 +247,21 @@ jobs:
       - name: Set Silk Screen URLs as output
         if: ${{ env.imgursecret != ''}}
         run: |
-          echo $IMGUR_URLS
+          json=$(jq -n '{}')
+          json=$(jq -n '{}') # Create an empty JSON object
+          IFS=', ' read -r -a urls <<< "$IMGUR_URLS"
+          images=($(find /tmp/images -type f -name "*.png" | sort -n))
+          for index in "${!urls[@]}"; do
+            url=${urls[index]}
+            images=${images[index]}
+            project=${images%/*}
+            project=${project##*/}
+            filename=${images##*/}
+            filename=${filename%.png}
+            # Add project-filename: url to the JSON object
+            json=$(jq --arg key "$project/$filename" --arg url "$url" '. + {($key): $url}' <<< "$json")
+          done
+          echo $json
           echo "silk_images=$IMGUR_URLS" >> $GITHUB_OUTPUT
         env:
           IMGUR_URLS: ${{ steps.imgur_step.outputs.imgur_urls }}
