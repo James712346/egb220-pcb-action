@@ -138,6 +138,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: /tmp/gerber
-      - name: List Gerber Files
+      - name: Install Gerbv and ImageMagick
         run: |
-          ls -l /tmp/gerber
+          apt-get update
+          apt-get install -y gerbv imagemagick
+      - name: Generate PNGs of Profile
+        run: |
+          for gerber in /tmp/gerber/*/*.gm1; do
+            echo $gerber
+          done
