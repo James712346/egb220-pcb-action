@@ -343,7 +343,7 @@ jobs:
             echo "![Silk Screen]($(echo "$silkscreen_urls" | jq -r '.["'"$key"'"]'))" >> /tmp/README.md
             echo "#### Extracted Text" >> /tmp/README.md
             echo "```" >> /tmp/README.md
-            echo "<<EOF > $(echo "$extracted_text" | jq -r '.["'"$key"'"]') EOF" >> /tmp/README.md
+            echo "<<EOF > $(echo "$extracted_text" | jq -r '.["'"$key"'"]') \n EOF" >> /tmp/README.md
             echo "```" >> /tmp/README.md
           done
           cat /tmp/README.md
