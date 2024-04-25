@@ -122,9 +122,9 @@ jobs:
   generates_kidcad_gerber_files:
     needs: setup_matrix
     runs-on: ubuntu-latest
-    if: ${{fromJson(needs.setup_matrix.outputs.kicad)}} != ${{fromJson('["None"]')}}
+    if: ${{needs.setup_matrix.outputs.kicad}} != '["None"]'
     container:
-      image: kicad/kicad:5.1.10
+      image: kicad/kicad:8.0
       options: --entrypoint /bin/bash
     strategy:
       matrix:
@@ -135,9 +135,11 @@ jobs:
 
       - name: Setup KiCad
         run: |
-          echo "Setting up KiCad for $folder"
+          echo "Setting up KiCad for $folder "
+          echo "Files: $files"
         env:
           file: ${{ matrix.file }}
+          files: ${{needs.setup_matrix.outputs.kicad}}
 
       - name: Generate Gerber files for KiCad
         run: |
