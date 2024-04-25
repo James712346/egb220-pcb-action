@@ -262,7 +262,8 @@ jobs:
             # Add project-filename: url to the JSON object
             json=$(jq --arg key "$project-$filename" --arg url "$url" '. + {($key): $url}' <<< "$json")
           done
-          echo "silk_images=$json" >> $GITHUB_OUTPUT
+          json_string=$(jq -r tostring <<< "$json")
+          echo "silk_images=$json_string" >> $GITHUB_OUTPUT
         env:
           IMGUR_URLS: ${{ steps.imgur_step.outputs.imgur_urls }}
       - name: No imgur secret
@@ -301,6 +302,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: /tmp/gerber
+      - name: Zip Gerber Files
+        run: |
+          cd /tmp/greber
+          for dir in *; do
+            zip -r $dir.zip $dir
+          done
       - name: Generate Readme for Release
         env:
           sizing: ${{ needs.gerber_size_check.outputs.sizing }}
