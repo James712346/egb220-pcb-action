@@ -44,7 +44,7 @@ jobs:
   generate_librePCB_gerber_files:
     needs: setup_matrix
     runs-on: ubuntu-latest
-    if: ${{needs.setup_matrix.outputs.librepcb}} != ["None"]
+    if: ${{fromJson(needs.setup_matrix.outputs.librepcb)}} != ${{fromJson('["None"]')}}
     container:
       image: librepcb/librepcb-cli:1.1.0
       options: --entrypoint /bin/bash
@@ -122,7 +122,7 @@ jobs:
   generates_kidcad_gerber_files:
     needs: setup_matrix
     runs-on: ubuntu-latest
-    if: ${{fromJson(needs.setup_matrix.outputs.kicad)}} != ["None"]
+    if: ${{fromJson(needs.setup_matrix.outputs.kicad)}} != ${{fromJson('["None"]')}}
     container:
       image: kicad/kicad:5.1.10
       options: --entrypoint /bin/bash
