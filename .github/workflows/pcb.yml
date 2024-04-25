@@ -293,6 +293,9 @@ jobs:
     needs: [gerber_size_check, gerber_silk_check]
     if: always()
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      discussions: write
     steps:
       - name: Get all Artifacts
         uses: actions/download-artifact@v4
@@ -304,25 +307,27 @@ jobs:
           silkscreen_urls: ${{ needs.gerber_silk_check.outputs.silk_images }}
           extracted_text: ${{ needs.gerber_silk_check.outputs.extracted_text }}
         run: |
-          echo "size=$sizing"
-          echo "silkscreen_urls=$silkscreen_urls"
-          echo "extracted_text=$extracted_text"
+          sizing=$(echo "$sizing" | jq -r '.')
+          silkscreen_urls=$(echo "$silkscreen_urls" | jq -r '.')
+          extracted_text=$(echo "$extracted_text" | jq -r '.')
+
           keys=$(jq -r 'keys[]' <<< $sizing)
+
           echo "# Gerber Files" > /tmp/README.md
           for key in $keys; do
             project=${key%-*}
             filename=${key##*-}
             echo "## Project: $project, Board: $filename" >> /tmp/README.md
             echo "### Size" >> /tmp/README.md
-            echo "Width: $(jq -r ".$key.width_mm" <<< $sizing) mm" >> /tmp/README.md
-            echo "Height: $(jq -r ".$key.height_mm" <<< $sizing) mm" >> /tmp/README.md
-            echo "Area: $(jq -r ".$key.area_mm" <<< $sizing) mm²" >> /tmp/README.md
-            echo "Price: $(jq -r ".$key.price" <<< $sizing)" >> /tmp/README.md
+            echo "Width: $(jq -r "."'"$key"'".width_mm" <<< $sizing) mm" >> /tmp/README.md
+            echo "Height: $(jq -r "."'"$key"'".height_mm" <<< $sizing) mm" >> /tmp/README.md
+            echo "Area: $(jq -r "."'"$key"'".area_mm" <<< $sizing) mm²" >> /tmp/README.md
+            echo "Price: $(jq -r "."'"$key"'".price" <<< $sizing)" >> /tmp/README.md
             echo "### Silk Screen" >> /tmp/README.md
-            echo "![Silk Screen for $key]($(jq -r ".$key" <<< $silkscreen_urls))" >> /tmp/README.md
+            echo "![Silk Screen for $key]($(jq -r "."'"$key"'"" <<< $silkscreen_urls))" >> /tmp/README.md
             echo "#### Extracted Text" >> /tmp/README.md
             echo "```" >> /tmp/README.md
-            echo "$(jq -r ".$key" <<< $extracted_text)" >> /tmp/README.md
+            echo "$(jq -r "."'"$key"'"" <<< $extracted_text)" >> /tmp/README.md
             echo "```" >> /tmp/README.md
           done
           cat /tmp/README.md
@@ -335,4 +340,3 @@ jobs:
           name: Gerber Files for ${{ github.sha }}
           body_path: /tmp/README.md
           draft: true
-          
