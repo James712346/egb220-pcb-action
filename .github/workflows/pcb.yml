@@ -140,8 +140,8 @@ jobs:
           path: /tmp/gerber
       - name: Install Gerbv and ImageMagick
         run: |
-          apt-get update
-          apt-get install -y gerbv imagemagick
+          sudo apt-get update
+          sudo apt-get install -y gerbv imagemagick
       - name: Generate PNGs of Profile
         run: |
           for gerber in /tmp/gerber/*/*.gm1; do
