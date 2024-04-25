@@ -19,6 +19,7 @@ jobs:
         id: list_librepcb_projects
         run: |
           export librepcb=$(find schematics -mindepth 1 -maxdepth 2 -name '*.lpp' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
+          echo $librepcb
           if [ -z "$librepcb" ]; then
             echo "No LibrePCB projects found."
             echo "librepcb=["None"]" >> $GITHUB_OUTPUT
@@ -29,6 +30,7 @@ jobs:
         id: list_kicad_projects
         run: |
           export kicad=$(find schematics -mindepth 1 -maxdepth 2 -name '*.kicad_pro' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
+          echo $kicad
           if [ -z "$kicad" ]; then
             echo "No KiCad projects found."
             echo "kicad=["None"]" >> $GITHUB_OUTPUT
@@ -244,12 +246,19 @@ jobs:
         with:
           client_id: ${{ env.imgursecret }}
           path: /tmp/images/*/*.png
-      - name: Output urls
+      - name: Set Silk Screen URLs as output
         if: ${{ env.imgursecret != ''}}
         run: |
-          echo "silk=$IMGUR_URLS"
+          echo "silk_images=$IMGUR_URLS" >> $GITHUB_OUTPUT
         env:
           IMGUR_URLS: ${{ steps.imgur_step.outputs.imgur_urls }}
+      - name: No imgur secret
+        if: ${{ env.imgursecret == ''}}
+        run: |
+          json=$(jq -n '{}')
+          json_string=$(jq -r tostring <<< "$json")
+          echo "silk_images=$json_string" >> $GITHUB_OUTPUTs
+          echo "No imgur secret provided, skipping imgur upload"
       - name: Extract Text from Silk Screen
         id: extract_text
         run: |
