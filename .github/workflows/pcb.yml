@@ -123,7 +123,7 @@ jobs:
       - name: Checkout code
         if: matrix.file != 'None'
         uses: actions/checkout@v4
-        
+
       - name: Setup KiCad
         if: matrix.file != 'None'
         run: |
@@ -206,6 +206,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       silk_images: ${{ steps.extract_text.outputs.silk }}
+      json: ${{ steps.extract_text.outputs.json }}
     env:
       TESSDATA_PREFIX: /usr/share/tessdata 
       imgursecret: ${{ secrets.IMGUR_CLIENT_ID }}
@@ -246,6 +247,20 @@ jobs:
       - name: Set Silk Screen URLs as output
         if: ${{ env.imgursecret != ''}}
         run: |
+          json=$(jq -n '{}')
+          IFS=', ' read -r -a urls <<< "$IMGUR_URLS"
+          images=($(find /tmp/images -type f -name "*.png"))
+          for index in "${!urls[@]}"; do
+            url=${urls[index]}
+            images=${images[index]}
+            project=${images%/*}
+            project=${project##*/}
+            filename=${images##*/}
+            filename=${filename%.png}
+            # Add project-filename: url to the JSON object
+            json=$(jq --arg key "$project-$filename" --arg url "$url" '. + {($key): $url}' <<< "$json")
+          done
+          echo $json
           echo "silk_images=$IMGUR_URLS" >> $GITHUB_OUTPUT
         env:
           IMGUR_URLS: ${{ steps.imgur_step.outputs.imgur_urls }}
@@ -273,5 +288,5 @@ jobs:
           echo $json
           json_string=$(jq -r tostring <<< "$json")
           echo "json=$json_string" >> $GITHUB_OUTPUT
-      
+    
 
