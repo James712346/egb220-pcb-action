@@ -330,7 +330,7 @@ jobs:
             echo "Width: $(echo "$sizing" | jq -r '.["'"$key"'"].width_mm') mm" >> /tmp/README.md
             echo "Height: $(echo "$sizing" | jq -r '.["'"$key"'"].height_mm') mm" >> /tmp/README.md
             echo "Area: $(echo "$sizing" | jq -r '.["'"$key"'"].area_mm') mm²" >> /tmp/README.md
-            echo "Price: $$(echo "$sizing" | jq -r '.["'"$key"'"].price')" >> /tmp/README.md
+            echo "Price: \$$(echo "$sizing" | jq -r '.["'"$key"'"].price')" >> /tmp/README.md
             echo "### Silk Screen" >> /tmp/README.md
             echo "![Silk Screen]($(echo "$silkscreen_urls" | jq -r '.["'"$key"'"]'))" >> /tmp/README.md
             echo "#### Extracted Text" >> /tmp/README.md
