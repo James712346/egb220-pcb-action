@@ -304,6 +304,9 @@ jobs:
           silkscreen_urls: ${{ needs.gerber_silk_check.outputs.silk_images }}
           extracted_text: ${{ needs.gerber_silk_check.outputs.extracted_text }}
         run: |
+          echo "size=$sizing"
+          echo "silkscreen_urls=$silkscreen_urls"
+          echo "extracted_text=$extracted_text"
           keys=$(jq -r 'keys[]' <<< $sizing)
           echo "# Gerber Files" > /tmp/README.md
           for key in $keys; do
