@@ -304,7 +304,7 @@ jobs:
           silkscreen_urls: ${{ needs.gerber_silk_check.outputs.silk_images }}
           extracted_text: ${{ needs.gerber_silk_check.outputs.extracted_text }}
         run: |
-          keys = $(jq -r 'keys[]' <<< $sizing)
+          keys=$(jq -r 'keys[]' <<< $sizing)
           echo "# Gerber Files" > /tmp/README.md
           for key in $keys; do
             project=${key%-*}
@@ -322,6 +322,7 @@ jobs:
             echo "$(jq -r ".$key" <<< $extracted_text)" >> /tmp/README.md
             echo "```" >> /tmp/README.md
           done
+          cat /tmp/README.md
 
       - name: Publish Release
         uses: softprops/action-gh-release@v2
