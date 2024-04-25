@@ -146,7 +146,7 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     outputs:
-      size: ${{ steps.cal_size.outputs.json }}
+      json: ${{ steps.cal_size.outputs.json }}
     steps:
       - name: Downloads All Artifacts
         uses: actions/download-artifact@v4
@@ -196,6 +196,7 @@ jobs:
             echo "Area: $square_inches inch² ($square_mm mm²)"
             echo "Price: $price"
           done
+          json_string=$(jq -r tostring <<< "$json")
           echo "json=$json" >> $GITHUB_OUTPUT
         env:
           price_per_square_inch: ${{ env.price-per-square-inch }}
@@ -207,7 +208,8 @@ jobs:
     outputs:
       silk_images: ${{ steps.extract_text.outputs.silk }}
     env:
-      TESSDATA_PREFIX: /usr/share/tessdata
+      TESSDATA_PREFIX: /usr/share/tessdata 
+      imgursecret: ${{ secrets.IMGUR_CLIENT_ID }}
     steps:
       - name: Downloads All Artifacts
         uses: actions/download-artifact@v4
@@ -242,9 +244,8 @@ jobs:
         with:
           client_id: ${{ env.imgursecret }}
           path: /tmp/images/*/*.png
-        env: 
-          imgursecret: ${{ secrets.IMGUR_CLIENT_ID }}
       - name: Output urls
+        if: ${{ env.imgursecret != ''}}
         run: |
           echo "silk=$IMGUR_URLS"
         env:
@@ -263,7 +264,8 @@ jobs:
             text=$(cat /tmp/images/$project/$filename.txt)
             json=$(jq --arg key "$project/$filename" --arg text "$text" '. + {($key): $text}' <<< "$json")
           done
-          echo "$json"
-          echo "json=$json" >> $GITHUB_OUTPUT
+          echo $json
+          json_string=$(jq -r tostring <<< "$json")
+          echo "json=$json_string" >> $GITHUB_OUTPUT
       
 
