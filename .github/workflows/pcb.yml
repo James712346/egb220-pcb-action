@@ -145,7 +145,7 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     outputs:
-      json: ${{ steps.cal_size.outputs.json }}
+      sizing: ${{ steps.cal_size.outputs.sizing }}
     steps:
       - name: Downloads All Artifacts
         uses: actions/download-artifact@v4
@@ -196,7 +196,7 @@ jobs:
             echo "Price: $price"
           done
           json_string=$(jq -r tostring <<< "$json")
-          echo "json=$json_string" >> $GITHUB_OUTPUT
+          echo "sizing=$json_string" >> $GITHUB_OUTPUT
         env:
           price_per_square_inch: ${{ env.price-per-square-inch }}
 
@@ -206,7 +206,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       silk_images: ${{ steps.extract_text.outputs.silk }}
-      json: ${{ steps.extract_text.outputs.json }}
+      extracted_text: ${{ steps.extract_text.outputs.extracted_text }}
     env:
       TESSDATA_PREFIX: /usr/share/tessdata 
       imgursecret: ${{ secrets.IMGUR_CLIENT_ID }}
@@ -259,7 +259,7 @@ jobs:
             filename=${images##*/}
             filename=${filename%.png}
             # Add project-filename: url to the JSON object
-            json=$(jq --arg key "$project/$filename" --arg url "$url" '. + {($key): $url}' <<< "$json")
+            json=$(jq --arg key "$project-$filename" --arg url "$url" '. + {($key): $url}' <<< "$json")
           done
           echo $json
           echo "silk_images=$IMGUR_URLS" >> $GITHUB_OUTPUT
@@ -288,6 +288,47 @@ jobs:
           done
           echo $json
           json_string=$(jq -r tostring <<< "$json")
-          echo "json=$json_string" >> $GITHUB_OUTPUT
-    
+          echo "extracted_text=$json_string" >> $GITHUB_OUTPUT
+  publish_release:
+    needs: [gerber_size_check, gerber_silk_check]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get all Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/gerber
+      - name: Generate Readme for Release
+        env:
+          sizing: ${{ needs.gerber_size_check.outputs.sizing }}
+          silkscreen_urls: ${{ needs.gerber_silk_check.outputs.silk_images }}
+          extracted_text: ${{ needs.gerber_silk_check.outputs.extracted_text }}
+        run: |
+          keys = $(jq -r 'keys[]' <<< $sizing)
+          echo "# Gerber Files" > /tmp/README.md
+          for key in $keys; do
+            project=${key%-*}
+            filename=${key##*-}
+            echo "## Project: $project, Board: $filename" >> /tmp/README.md
+            echo "### Size" >> /tmp/README.md
+            echo "Width: $(jq -r ".$key.width_mm" <<< $sizing) mm" >> /tmp/README.md
+            echo "Height: $(jq -r ".$key.height_mm" <<< $sizing) mm" >> /tmp/README.md
+            echo "Area: $(jq -r ".$key.area_mm" <<< $sizing) mm²" >> /tmp/README.md
+            echo "Price: $(jq -r ".$key.price" <<< $sizing)" >> /tmp/README.md
+            echo "### Silk Screen" >> /tmp/README.md
+            echo "![Silk Screen for $key]($(jq -r ".$key" <<< $silkscreen_urls))" >> /tmp/README.md
+            echo "#### Extracted Text" >> /tmp/README.md
+            echo "```" >> /tmp/README.md
+            echo "$(jq -r ".$key" <<< $extracted_text)" >> /tmp/README.md
+            echo "```" >> /tmp/README.md
+          done
 
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: /tmp/gerber/*
+          tag_name: ${{ github.sha }}
+          name: Gerber Files for ${{ github.sha }}
+          body_path: /tmp/README.md
+          draft: true
+          
