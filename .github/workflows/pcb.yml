@@ -20,7 +20,7 @@ jobs:
         run: |
           export librepcb=$(find schematics -mindepth 1 -maxdepth 2 -name '*.lpp' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
           echo $librepcb
-          if [ -z "$librepcb" ]; then
+          if [ "$librepcb" = "[]" ]; then
             echo "No LibrePCB projects found."
             echo "librepcb=["None"]" >> $GITHUB_OUTPUT
           else
@@ -31,7 +31,7 @@ jobs:
         run: |
           export kicad=$(find schematics -mindepth 1 -maxdepth 2 -name '*.kicad_pro' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
           echo $kicad
-          if [ -z "$kicad" ]; then
+          if [ "$kicad" = "[]" ]; then
             echo "No KiCad projects found."
             echo "kicad=["None"]" >> $GITHUB_OUTPUT
           else
