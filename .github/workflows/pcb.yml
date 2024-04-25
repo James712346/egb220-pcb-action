@@ -158,8 +158,11 @@ jobs:
         run: |
           mkdir -p /tmp/images/
           for gerber in /tmp/gerber/*/*.gm1; do
+            project=${gerber%/*}
+            project=${project##*/}
             filename=${gerber##*/}
-            gerbv -x png -o /tmp/images/${filename%.gm1}.png $gerber -D 1000
+            echo "Generating PNG for $project-${filename%.gm1}"
+            gerbv -x png -o /tmp/images/$project-${filename%.gm1}.png $gerber -D 1000
           done
       - name: Evaluate Gerber Size and set width n height
         run: |
