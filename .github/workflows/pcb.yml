@@ -18,29 +18,33 @@ jobs:
       - name: List project files for LibrePCB
         id: list_librepcb_projects
         run: |
-          export librepcb=$(find schematics -mindepth 1 -maxdepth 2 -name '*.lpp' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
+          librepcb=$(find schematics -mindepth 1 -maxdepth 2 -name '*.lpp' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
           echo $librepcb
           if [ "$librepcb" = "[]" ]; then
             echo "No LibrePCB projects found."
-            echo "librepcb=["None"]" >> $GITHUB_OUTPUT
+            librepcb=$(jq -n '["None"]')
+            librepcb=$(jq -r tostring <<< "$librepcb")
+            echo "librepcb=$librepcb" >> $GITHUB_OUTPUT
           else
             echo "librepcb=$librepcb" >> $GITHUB_OUTPUT
           fi
       - name: List project files for KiCad
         id: list_kicad_projects
         run: |
-          export kicad=$(find schematics -mindepth 1 -maxdepth 2 -name '*.kicad_pro' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
+          kicad=$(find schematics -mindepth 1 -maxdepth 2 -name '*.kicad_pro' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
           echo $kicad
           if [ "$kicad" = "[]" ]; then
             echo "No KiCad projects found."
-            echo "kicad=["None"]" >> $GITHUB_OUTPUT
+            kicad=$(jq -n '["None"]')
+            kicad=$(jq -r tostring <<< "$kicad")
+            echo "kicad=$kicad" >> $GITHUB_OUTPUT
           else
             echo "kicad=$kicad" >> $GITHUB_OUTPUT
           fi
   generate_librePCB_gerber_files:
     needs: setup_matrix
     runs-on: ubuntu-latest
-    if: ${{fromJson(needs.setup_matrix.outputs.librepcb)}} != ["None"]
+    if: ${{needs.setup_matrix.outputs.librepcb}} != ["None"]
     container:
       image: librepcb/librepcb-cli:1.1.0
       options: --entrypoint /bin/bash
@@ -50,7 +54,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup gerber Config
         run: |
           echo "Setting up Gerber Config"
@@ -88,7 +91,7 @@ jobs:
       - name: Format Name
         id: matrix_name
         run: |
-          export x=${file%.lpp}
+          x=${file%.lpp}
           echo "name=${x##*/}" >> $GITHUB_OUTPUT
         env:
           file: ${{ matrix.file }}
