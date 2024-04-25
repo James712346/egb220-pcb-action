@@ -153,7 +153,7 @@ jobs:
       - name: Install Gerbv and ImageMagick
         run: |
           sudo apt-get update
-          sudo apt-get install -y gerbv imagemagick libmagickwand-dev libpng-dev
+          sudo apt-get install -y gerbv imagemagick
       - name: Generate PNGs of Profile
         run: |
           mkdir -p /tmp/images/
@@ -164,8 +164,8 @@ jobs:
       - name: Evaluate Gerber Size and set width n height
         run: |
           for image in /tmp/images/*.png; do
-            width=$(identify -format '%w' "$filename")
-            height=$(identify -format '%h' "$filename")
+            width=$(identify -format '%w' "$image")
+            height=$(identify -format '%h' "$image")
             echo "Width: $width, Height: $height"
             echo "Square Inches: $(bc <<< "scale=2; $width*$height/1000")"
             echo "Price: $(bc <<< "scale=2; $width*$height/1000*$price_per_square_inch")"
