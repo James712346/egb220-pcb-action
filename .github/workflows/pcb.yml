@@ -121,8 +121,9 @@ jobs:
         file: ${{fromJson(needs.setup_matrix.outputs.kicad)}}
     steps:
       - name: Checkout code
+        if: matrix.file != 'None'
         uses: actions/checkout@v4
-
+        
       - name: Setup KiCad
         if: matrix.file != 'None'
         run: |
