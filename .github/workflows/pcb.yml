@@ -318,7 +318,7 @@ jobs:
           sizing=$(echo "$sizing" | jq -r '.')
           silkscreen_urls=$(echo "$silkscreen_urls" | jq -r '.')
           extracted_text=$(echo "$extracted_text" | jq -r '.')
-          echo "$silkscreen_urls"
+          echo "$extracted_text"
           keys=$(jq -r 'keys[]' <<< $sizing)
 
           echo "# Gerber Files" > /tmp/README.md
@@ -338,7 +338,7 @@ jobs:
             echo "| Height | $(echo "$sizing" | jq -r '.["'"$key"'"].height_mm') | mm |" >> /tmp/README.md
             echo "| Area | $(echo "$sizing" | jq -r '.["'"$key"'"].area_inch') | inch² |" >> /tmp/README.md
             echo "| Area | $(echo "$sizing" | jq -r '.["'"$key"'"].area_mm') | mm² |" >> /tmp/README.md
-            echo "| Price | $(echo "$sizing" | jq -r '.["'"$key"'"].price') | USD |" >> /tmp/README.md
+            echo "| Price | \$$(echo "$sizing" | jq -r '.["'"$key"'"].price') | AUD |" >> /tmp/README.md
             echo "### Silk Screen" >> /tmp/README.md
             echo "![Silk Screen]($(echo "$silkscreen_urls" | jq -r '.["'"$key"'"]'))" >> /tmp/README.md
             echo "#### Extracted Text" >> /tmp/README.md
