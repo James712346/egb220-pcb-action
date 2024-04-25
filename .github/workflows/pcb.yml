@@ -254,11 +254,11 @@ jobs:
           images=($(find /tmp/images -type f -name "*.png" | sort -n))
           for index in "${!urls[@]}"; do
             url=${urls[index]}
-            images=${images[index]}
-            images=$(echo $images | tr -d '"[]')
-            project=${images%/*}
+            url=$(echo $url | tr -d '"[]')
+            image=${images[index]}
+            project=${image%/*}
             project=${project##*/}
-            filename=${images##*/}
+            filename=${image##*/}
             filename=${filename%.png}
             # Add project-filename: url to the JSON object
             json=$(jq --arg key "$project-$filename" --arg url "$url" '. + {($key): $url}' <<< "$json")
@@ -286,7 +286,7 @@ jobs:
             echo "Extracting text from $project-$filename"
             tesseract $image /tmp/images/$project/$filename --dpi 1000 --psm 11 --oem 0
             text=$(cat /tmp/images/$project/$filename.txt)
-            json=$(jq --arg key "$project/$filename" --arg text "$text" '. + {($key): $text}' <<< "$json")
+            json=$(jq --arg key "$project-$filename" --arg text "$text" '. + {($key): $text}' <<< "$json")
           done
           echo $json
           json_string=$(jq -r tostring <<< "$json")
