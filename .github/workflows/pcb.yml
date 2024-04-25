@@ -41,10 +41,10 @@ jobs:
           else
             echo "kicad=$kicad" >> $GITHUB_OUTPUT
           fi
+        
   generate_librePCB_gerber_files:
     needs: setup_matrix
     runs-on: ubuntu-latest
-    if: ${{fromJson(needs.setup_matrix.outputs.librepcb)}} != ${{fromJson('["None"]')}}
     container:
       image: librepcb/librepcb-cli:1.1.0
       options: --entrypoint /bin/bash
@@ -53,8 +53,10 @@ jobs:
         file: ${{fromJson(needs.setup_matrix.outputs.librepcb)}}
     steps:
       - name: Checkout code
+        if: matrix.file != 'None'
         uses: actions/checkout@v4
       - name: Setup gerber Config
+        if: matrix.file != 'None'
         run: |
           echo "Setting up Gerber Config"
           cat <<EOF > /tmp/gerber-config.lp
@@ -83,12 +85,14 @@ jobs:
           EOF
 
       - name: Generate Gerber files for LibrePCB
+        if: matrix.file != 'None'
         run: |
           echo "Generating Gerber files for $file (LibrePCB)"
           librepcb-cli open-project $file --export-pcb-fabrication-data --pcb-fabrication-settings /tmp/gerber-config.lp
         env:
           file: ${{ matrix.file }}
       - name: Format Name
+        if: matrix.file != 'None'
         id: matrix_name
         run: |
           x=${file%.lpp}
@@ -96,6 +100,7 @@ jobs:
         env:
           file: ${{ matrix.file }}
       - name: Add Artifacts
+        if: matrix.file != 'None'
         uses: actions/upload-artifact@v4
         with:
           name: ${{steps.matrix_name.outputs.name}}
@@ -103,45 +108,31 @@ jobs:
           retention-days: 1
         env:
           file: ${{ matrix.file }}
-      # - name: Install Gerbv and ImageMagick
-      #   run: |
-      #     apt-get update
-      #     apt-get install -y gerbv imagemagick
-      # - name: LIST Gerber files
-      #   run: |
-      #       for gerber in $folder/output/*/gerber/*; do
-      #         echo $gerber
-      #       done
-      # - name: Convert Profile to PNG
-      #   run: |
-      #     for gerber in $folder/output/*/gerber/*_OUTLINES.gbr; do
-      #       echo $gerber
-      #     done
 
 
   generates_kidcad_gerber_files:
     needs: setup_matrix
     runs-on: ubuntu-latest
-    if: ${{needs.setup_matrix.outputs.kicad}} != '["None"]'
     container:
       image: kicad/kicad:8.0
-      options: --entrypoint /bin/bash
+      options: --entrypoint /bin/bash --user root
     strategy:
       matrix:
         file: ${{fromJson(needs.setup_matrix.outputs.kicad)}}
     steps:
-      # - name: Checkout code
-      #   uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup KiCad
+        if: matrix.file != 'None'
         run: |
           echo "Setting up KiCad for $folder "
           echo "Files: $files"
         env:
           file: ${{ matrix.file }}
-          files: ${{needs.setup_matrix.outputs.kicad}}
 
       - name: Generate Gerber files for KiCad
+        if: matrix.file != 'None'
         run: |
           echo "Generating Gerber files for $file (KiCad)"
           # Run commands to generate Gerber files for KiCad
