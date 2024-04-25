@@ -17,16 +17,25 @@ jobs:
       - name: List project files for LibrePCB
         id: list_librepcb_projects
         run: |
-          echo "librepcb=$(find schematics -mindepth 1 -maxdepth 2 -name '*.lpp' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
+          export librepcb=$(find schematics -mindepth 1 -maxdepth 2 -name '*.lpp' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
+          if [ -z "$librepcb" ]; then
+            echo "librepcb=["None"]" >> $GITHUB_OUTPUT
+          else
+            echo "librepcb=$librepcb" >> $GITHUB_OUTPUT
+          fi
       - name: List project files for KiCad
         id: list_kicad_projects
         run: |
-          echo "kicad=$(find schematics -mindepth 1 -maxdepth 2 -name '*.kicad_pro' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
-
+          export kicad=$(find schematics -mindepth 1 -maxdepth 2 -name '*.kicad_pro' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')"
+          if [ -z "$kicad" ]; then
+            echo "kicad=["None"]" >> $GITHUB_OUTPUT
+          else
+            echo "kicad=$kicad" >> $GITHUB_OUTPUT
+          fi
   generate_librePCB_gerber_files:
     needs: setup_matrix
     runs-on: ubuntu-latest
-    if: ${{fromJson(needs.setup_matrix.outputs.librepcb)}} != []
+    if: ${{fromJson(needs.setup_matrix.outputs.librepcb)}} != ["None"]
     container:
       image: librepcb/librepcb-cli:1.1.0
       options: --entrypoint /bin/bash
@@ -105,7 +114,7 @@ jobs:
   generates_kidcad_gerber_files:
     needs: setup_matrix
     runs-on: ubuntu-latest
-    if: ${{fromJson(needs.setup_matrix.outputs.kicad)}} != []
+    if: ${{fromJson(needs.setup_matrix.outputs.kicad)}} != ["None"]
     container:
       image: kicad/kicad:5.1.10
       options: --entrypoint /bin/bash
@@ -144,6 +153,8 @@ jobs:
           sudo apt-get install -y gerbv imagemagick
       - name: Generate PNGs of Profile
         run: |
+          mkdir -p /tmp/images/
           for gerber in /tmp/gerber/*/*.gm1; do
-            echo $gerber
+            filename=${gerber##*/}
+            gerbv -x png -o /tmp/images/${filename%.gm1}.png $gerber -D 1000
           done
