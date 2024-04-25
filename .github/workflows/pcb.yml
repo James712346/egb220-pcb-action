@@ -317,7 +317,7 @@ jobs:
           sizing=$(echo "$sizing" | jq -r '.')
           silkscreen_urls=$(echo "$silkscreen_urls" | jq -r '.')
           extracted_text=$(echo "$extracted_text" | jq -r '.')
-
+          echo "$silkscreen_urls"
           keys=$(jq -r 'keys[]' <<< $sizing)
 
           echo "# Gerber Files" > /tmp/README.md
