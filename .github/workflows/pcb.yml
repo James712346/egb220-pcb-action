@@ -188,7 +188,7 @@ jobs:
 
             price=$(bc <<< "scale=2; $square_inches*${{ env.price-per-square-inch }}")
             
-            json=$(jq --arg key "$project/$filename" --argjson value "{\"width_px\": $width, \"height_px\": $height, \"width_inch\": $width_inch, \"height_inch\": $height_inch, \"width_mm\": $width_mm, \"height_mm\": $height_mm, \"area_inch\": $square_inches, \"area_mm\": $square_mm, \"price\": $price}" '. + {($key): $value}' <<< "$json")
+            json=$(jq --arg key "$project-$filename" --argjson value "{\"width_px\": $width, \"height_px\": $height, \"width_inch\": $width_inch, \"height_inch\": $height_inch, \"width_mm\": $width_mm, \"height_mm\": $height_mm, \"area_inch\": $square_inches, \"area_mm\": $square_mm, \"price\": $price}" '. + {($key): $value}' <<< "$json")
 
             echo "Image: $image"
             echo "Width: $width px ($width_inch inch, $width_mm mm)"
@@ -249,7 +249,7 @@ jobs:
         run: |
           echo "silk=$IMGUR_URLS"
         env:
-          IMGUR_URLS: ${{ fromJSON(steps.imgur_step.outputs.imgur_urls) }}
+          IMGUR_URLS: ${{ steps.imgur_step.outputs.imgur_urls }}
       - name: Extract Text from Silk Screen
         id: extract_text
         run: |
