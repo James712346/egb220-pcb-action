@@ -166,8 +166,21 @@ jobs:
           for image in /tmp/images/*.png; do
             width=$(identify -format '%w' "$image")
             height=$(identify -format '%h' "$image")
-            echo "Width: $width, Height: $height"
-            echo "Square Inches: $(bc <<< "scale=2; $width*$height/1000")"
-            echo "Price: $(bc <<< "scale=2; $width*$height/1000*$price_per_square_inch")"
+            width_inch=$(bc <<< "scale=2; $width/1000")
+            height_inch=$(bc <<< "scale=2; $height/1000")
+            width_mm=$(bc <<< "scale=2; $width_inch*25.4")
+            height_mm=$(bc <<< "scale=2; $height_inch*25.4")
+            square_inches=$(bc <<< "scale=2; $width_inch*$height_inch")
+            square_mm=$(bc <<< "scale=2; $width_mm*$height_mm")
+
+            price=$(bc <<< "scale=2; $square_inches*${{ env.price-per-square-inch }}")
+            
+            echo "Image: $image"
+            echo "Width: $width px ($width_inch inch, $width_mm mm)"
+            echo "Height: $height px ($height_inch inch, $height_mm mm)"
+            echo "Area: $square_inches inch² ($square_mm mm²)"
+            echo "Price: $price"
           done
+        env:
+          price_per_square_inch: ${{ env.price-per-square-inch }}
 
