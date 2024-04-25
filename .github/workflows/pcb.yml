@@ -197,7 +197,7 @@ jobs:
             echo "Price: $price"
           done
           json_string=$(jq -r tostring <<< "$json")
-          echo "json=$json" >> $GITHUB_OUTPUT
+          echo "json=$json_string" >> $GITHUB_OUTPUT
         env:
           price_per_square_inch: ${{ env.price-per-square-inch }}
 
