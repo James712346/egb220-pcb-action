@@ -145,6 +145,8 @@ jobs:
     needs: [generate_librePCB_gerber_files, generates_kidcad_gerber_files]
     if: always()
     runs-on: ubuntu-latest
+    outputs:
+      size: ${{ steps.cal_size.outputs.json }}
     steps:
       - name: Downloads All Artifacts
         uses: actions/download-artifact@v4
@@ -161,13 +163,20 @@ jobs:
             project=${gerber%/*}
             project=${project##*/}
             filename=${gerber##*/}
-            echo "Generating PNG for $project-${filename%.gm1}"
-            gerbv -x png -o /tmp/images/$project-${filename%.gm1}.png $gerber -D 1000
+            filename=${filename%.gm1}
+            echo "Generating PNG for $project-$filename"
+            mkdir -p /tmp/images/$project
+            gerbv -x png -o /tmp/images/$project/$filename.png $gerber -D 1000 -B 0
           done
       - name: Evaluate Gerber Size 
+        id: cal_size
         run: |
           json=$(jq -n '{}')
-          for image in /tmp/images/*.png; do
+          for image in /tmp/images/*/*.png; do
+            project=${image%/*}
+            project=${project##*/}
+            filename=${image##*/}
+            filename=${filename%.png}
             width=$(identify -format '%w' "$image")
             height=$(identify -format '%h' "$image")
             width_inch=$(bc <<< "scale=2; $width/1000")
@@ -179,7 +188,7 @@ jobs:
 
             price=$(bc <<< "scale=2; $square_inches*${{ env.price-per-square-inch }}")
             
-            json=$(jq --arg key "$image" --argjson value "{\"width_px\": $width, \"height_px\": $height, \"width_inch\": $width_inch, \"height_inch\": $height_inch, \"width_mm\": $width_mm, \"height_mm\": $height_mm, \"area_inch\": $square_inches, \"area_mm\": $square_mm, \"price\": $price}" '. + {($key): $value}' <<< "$json")
+            json=$(jq --arg key "$project/$filename" --argjson value "{\"width_px\": $width, \"height_px\": $height, \"width_inch\": $width_inch, \"height_inch\": $height_inch, \"width_mm\": $width_mm, \"height_mm\": $height_mm, \"area_inch\": $square_inches, \"area_mm\": $square_mm, \"price\": $price}" '. + {($key): $value}' <<< "$json")
 
             echo "Image: $image"
             echo "Width: $width px ($width_inch inch, $width_mm mm)"
@@ -187,7 +196,74 @@ jobs:
             echo "Area: $square_inches inch² ($square_mm mm²)"
             echo "Price: $price"
           done
-          echo "$json"
+          echo "json=$json" >> $GITHUB_OUTPUT
         env:
           price_per_square_inch: ${{ env.price-per-square-inch }}
+
+  gerber_silk_check:
+    needs: [generate_librePCB_gerber_files, generates_kidcad_gerber_files]
+    if: always()
+    runs-on: ubuntu-latest
+    outputs:
+      silk_images: ${{ steps.extract_text.outputs.silk }}
+    env:
+      TESSDATA_PREFIX: /usr/share/tessdata
+    steps:
+      - name: Downloads All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/gerber
+      - name: Install Gerbv
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gerbv
+      - name: Generate PNGs of Silk Screen
+        run: |
+          mkdir -p /tmp/images/
+          for gerber in /tmp/gerber/*/*.gto; do
+            project=${gerber%/*}
+            project=${project##*/}
+            filename=${gerber##*/}
+            filename=${filename%.gto}
+            echo "Generating PNG for $project-$filename"
+            mkdir -p /tmp/images/$project
+            gerbv -x png -o /tmp/images/$project/$filename.png $gerber -D 1000
+          done
+      - name: Install Tesseract OCR
+        run: |
+          sudo apt-get install -y tesseract-ocr
+          wget https://github.com/tesseract-ocr/tessdata/raw/main/eng.traineddata
+          mkdir -p /usr/share/tessdata
+          sudo mv eng.traineddata /usr/share/tessdata
+      - name: Publish silkscreens on imgur
+        id: imgur_step
+        uses: devicons/public-upload-to-imgur@v2.2.2
+        if: ${{ env.imgursecret != ''}}
+        with:
+          client_id: ${{ env.imgursecret }}
+          path: /tmp/images/*/*.png
+        env: 
+          imgursecret: ${{ secrets.IMGUR_CLIENT_ID }}
+      - name: Output urls
+        run: |
+          echo "silk=$IMGUR_URLS"
+        env:
+          IMGUR_URLS: ${{ fromJSON(steps.imgur_step.outputs.imgur_urls) }}
+      - name: Extract Text from Silk Screen
+        id: extract_text
+        run: |
+          json=$(jq -n '{}')
+          for image in /tmp/images/*/*.png; do
+            project=${image%/*}
+            project=${project##*/}
+            filename=${image##*/}
+            filename=${filename%.png}
+            echo "Extracting text from $project-$filename"
+            tesseract $image /tmp/images/$project/$filename --dpi 1000 --psm 11 --oem 0
+            text=$(cat /tmp/images/$project/$filename.txt)
+            json=$(jq --arg key "$project/$filename" --arg text "$text" '. + {($key): $text}' <<< "$json")
+          done
+          echo "$json"
+          echo "json=$json" >> $GITHUB_OUTPUT
+      
 
