@@ -18,8 +18,8 @@ jobs:
         id: list_librepcb_projects
         run: |
           export librepcb=$(find schematics -mindepth 1 -maxdepth 2 -name '*.lpp' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
-          echo $librepcb
           if [ -z "$librepcb" ]; then
+            echo "No LibrePCB projects found."
             echo "librepcb=["None"]" >> $GITHUB_OUTPUT
           else
             echo "librepcb=$librepcb" >> $GITHUB_OUTPUT
@@ -27,8 +27,9 @@ jobs:
       - name: List project files for KiCad
         id: list_kicad_projects
         run: |
-          export kicad=$(find schematics -mindepth 1 -maxdepth 2 -name '*.kicad_pro' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')"
+          export kicad=$(find schematics -mindepth 1 -maxdepth 2 -name '*.kicad_pro' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
           if [ -z "$kicad" ]; then
+            echo "No KiCad projects found."
             echo "kicad=["None"]" >> $GITHUB_OUTPUT
           else
             echo "kicad=$kicad" >> $GITHUB_OUTPUT
