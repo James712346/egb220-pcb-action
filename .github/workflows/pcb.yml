@@ -3,7 +3,8 @@ on:
   push:
     branches:
       - main
-
+env:
+  price-per-square-inch: 2.5
 jobs:
   setup_matrix:
     runs-on: ubuntu-latest
@@ -160,3 +161,13 @@ jobs:
             filename=${gerber##*/}
             gerbv -x png -o /tmp/images/${filename%.gm1}.png $gerber -D 1000
           done
+      - name: Evaluate Gerber Size and set width n height
+        run: |
+          for image in /tmp/images/*.png; do
+            width=$(identify -format '%w' "$filename")
+            height=$(identify -format '%h' "$filename")
+            echo "Width: $width, Height: $height"
+            echo "Square Inches: $(bc <<< "scale=2; $width*$height/1000")"
+            echo "Price: $(bc <<< "scale=2; $width*$height/1000*$price_per_square_inch")"
+          done
+
