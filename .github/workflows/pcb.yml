@@ -130,8 +130,8 @@ jobs:
       matrix:
         file: ${{fromJson(needs.setup_matrix.outputs.kicad)}}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # - name: Checkout code
+      #   uses: actions/checkout@v4
 
       - name: Setup KiCad
         run: |
