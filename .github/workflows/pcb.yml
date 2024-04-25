@@ -144,7 +144,6 @@ jobs:
   gerber_size_check:
     needs: [generate_librePCB_gerber_files, generates_kidcad_gerber_files]
     if: always()
-    id: gerber_size_check
     runs-on: ubuntu-latest
     steps:
       - name: Downloads All Artifacts
