@@ -387,8 +387,16 @@ jobs:
           echo "project=${x##*/}" >> $GITHUB_OUTPUT
         env:
           project: ${{ matrix.projects }}
-      - name: Team Existances
-        run: echo $project
+      - name: Get Boards for project
+        run: |
+          project=${project%.lpp}
+          project=${project##*/}
+          keys=$(jq -r 'keys[]' <<< $extracted_text)
+          for key in $keys; do
+            if [[ $key == $project-* ]]; then
+              echo "Found $key"
+            fi
+          done
         env:
           project: ${{ steps.fp.outputs.project }}
 
