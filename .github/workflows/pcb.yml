@@ -488,7 +488,7 @@ jobs:
             boardname=${gerber##*/}
             boardname=${boardname%.*}
             boardname=$(echo $boardname | tr '[:upper:]' '[:lower:]')
-            echo "$project_$boardname"
+            echo "$project $boardname"
             if [ ! -d /tmp/packages/$project_$boardname ]; then
               mkdir -p /tmp/packages/$project_$boardname
               key=$project-$boardname
