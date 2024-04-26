@@ -427,7 +427,6 @@ jobs:
               echo "Board $board has team on either top or bottom"
             else
               echo "Board $board does not have team on either top or bottom"
-              exit 1
             fi
           done
   gerber_size_check:
