@@ -386,10 +386,11 @@ jobs:
       matrix:
         projects: ${{fromJson(needs.setup_matrix.outputs.projects)}}
     env:
-      extracted_text: ${{ needs.gerber_silk_check.outputs.extracted_text }}
+      extracted_text: ${{ needs.gerber_silkscreen_generation.outputs.extracted_text }}
     steps:
       - name: Format Project
         id: fproject
+        if: matrix.projects != 'None'
         run: |
           x=${project%.lpp}
           echo "project=${x##*/}" >> $GITHUB_OUTPUT
@@ -397,6 +398,7 @@ jobs:
           project: ${{ matrix.projects }}
       - name: Get Boards for project
         id: boards
+        if: matrix.projects != 'None'
         run: |
           boards=$(jq -n '[]')
           keys=$(jq -r 'keys[]' <<< $extracted_text)
@@ -415,12 +417,13 @@ jobs:
         env:
           project: ${{ steps.fproject.outputs.project }}
           boards: ${{ steps.boards.outputs.boards }}
+        if: matrix.projects != 'None'
         run: |
           boards=$(echo $boards | jq -c '.[]' | tr -d '"')
           for board in $boards; do
-            top=$(jq -r '.["'"$project-$board-top"'"]' <<< $extracted_text)
-            bottom=$(jq -r '.["'"$project-$board-bottom"'"]' <<< $extracted_text)
-            if [[ $top == *"Team"* ]] || [[ $bottom == *"Team"* ]]; then
+            top=$(echo $(jq -r '.["'"$project-$board-top"'"]' <<< $extracted_text) | grep -i "team")
+            bottom=$(echo $(jq -r '.["'"$project-$board-bottom"'"]' <<< $extracted_text) | grep -i "team")
+            if [[ -n $top ]] || [[ -n $bottom ]]; then
               echo "Board $board has team on either top or bottom"
             else
               echo "Board $board does not have team on either top or bottom"
@@ -439,12 +442,14 @@ jobs:
     steps:
       - name: Format Project
         id: fproject
+        if: matrix.projects != 'None'
         run: |
           x=${project%.lpp}
           echo "project=${x##*/}" >> $GITHUB_OUTPUT
         env:
           project: ${{ matrix.projects }}
       - name: Get Boards for project
+        if: matrix.projects != 'None'
         id: boards
         run: |
           extracted_text=$(echo "$extracted_text" | jq -r '.')
@@ -461,6 +466,7 @@ jobs:
           project: ${{ steps.fproject.outputs.project }}
           sizing: ${{ needs.gerber_size_generation.outputs.sizing }}
       - name: Check Boards are within size limits
+        if: matrix.projects != 'None'
         env:
           project: ${{ steps.fproject.outputs.project }}
           boards: ${{ steps.boards.outputs.boards }}
