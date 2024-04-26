@@ -4,6 +4,7 @@ on:
     branches:
       - main
 env:
+  group_name: C8
   max-width-mm: 100
   max-height-mm: 100
   price-per-square-inch: 2.5
@@ -473,9 +474,53 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: /tmp/gerber
+
+      - name: Make Packages
+        run: |
+          mkdir -p /tmp/packages
+          for gerber in /tmp/gerber/*/*; do
+            project=${gerber%/*}
+            project=${project##*/}
+            boardname=${gerber##*/}
+            boardname=${boardname%.*}
+            boardname=$(echo $boardname | tr '[:upper:]' '[:lower:]')
+            if [ ! -d /tmp/packages/$project_$boardname ]; then
+              mkdir -p /tmp/packages/$project_$boardname
+            fi
+            key=$project-$boardname
+            echo "# Project: $project, Board: $boardname" >> /tmp/packages/$project_$boardname/README.md
+            echo "## Size" >> /tmp/packages/$project_$boardname/README.md
+            echo "| Attribute | Value | Unit |" >> /tmp/packages/$project_$boardname/README.md
+            echo "|-----------|:-----:|-----:|" >> /tmp/packages/$project_$boardname/README.md
+            echo "| Width | $(echo "$sizing" | jq -r '.["'"$key"'"].width_px') | px |" >> /tmp/packages/$project_$boardname/README.md
+            echo "| Height | $(echo "$sizing" | jq -r '.["'"$key"'"].height_px') | px |" >> /tmp/packages/$project_$boardname/README.md
+            echo "| Width | $(echo "$sizing" | jq -r '.["'"$key"'"].width_inch') | inch |" >> /tmp/packages/$project_$boardname/README.md
+            echo "| Height | $(echo "$sizing" | jq -r '.["'"$key"'"].height_inch') | inch |" >> /tmp/packages/$project_$boardname/README.md
+            echo "| Width | $(echo "$sizing" | jq -r '.["'"$key"'"].width_mm') | mm |" >> /tmp/packages/$project_$boardname/README.md
+            echo "| Height | $(echo "$sizing" | jq -r '.["'"$key"'"].height_mm') | mm |" >> /tmp/packages/$project_$boardname/README.md
+            echo "| Area | $(echo "$sizing" | jq -r '.["'"$key"'"].area_inch') | inch² |" >> /tmp/packages/$project_$boardname/README.md
+            echo "| Area | $(echo "$sizing" | jq -r '.["'"$key"'"].area_mm') | mm² |" >> /tmp/packages/$project_$boardname/README.md
+            echo "| Price | \$$(echo "$sizing" | jq -r '.["'"$key"'"].price') | AUD |" >> /tmp/packages/$project_$boardname/README.md
+            echo "## Silk Screen" >> /tmp/packages/$project_$boardname/README.md
+            echo "### Top Layer"
+            echo "![Silk Screen]($(echo "$silkscreen_urls" | jq -r '.["'"$key-top"'"]'))" >> /tmp/packages/$project_$boardname/README.md
+            echo "#### Extracted Text" >> /tmp/packages/$project_$boardname/README.md
+            echo "\`\`\`" >> /tmp/packages/$project_$boardname/README.md
+            echo "$extracted_text" | jq -r '.["'"$key-top"'"]' >> /tmp/packages/$project_$boardname/README.md
+            echo "\`\`\`" >> /tmp/packages/$project_$boardname/README.md
+            echo "### Bottom Layer"
+            echo "![Silk Screen]($(echo "$silkscreen_urls" | jq -r '.["'"$key-bottom"'"]'))" >> /tmp/packages/$project_$boardname/README.md
+            echo "#### Extracted Text" >> /tmp/packages/$project_$boardname/README.md
+            echo "\`\`\`" >> /tmp/packages/$project_$boardname/README.md
+            echo "$extracted_text" | jq -r '.["'"$key-bottom"'"]' >> /tmp/packages/$project_$boardname/README.md
+            echo "\`\`\`" >> /tmp/packages/$project_$boardname/README.md
+            mv $gerber /tmp/packages/$group_name_$project_$boardname/
+          done
+          
+          
       - name: Zip Gerber Files
         run: |
-          cd /tmp/gerber
+          cd /tmp/packages
           for dir in *; do
             zip -r $dir.zip $dir
           done
@@ -490,12 +535,12 @@ jobs:
           extracted_text=$(echo "$extracted_text" | jq -r '.')
           echo "$extracted_text"
           keys=$(jq -r 'keys[]' <<< $sizing)
-
+          touch /tmp/README.md
+          
           echo "# Gerber Files" > /tmp/README.md
           for key in $keys; do
             project=${key%-*}
             filename=${key##*-}
-            touch /tmp/README.md
             echo "## Project: $project, Board: $filename" >> /tmp/README.md
             echo "### Size" >> /tmp/README.md
             echo "| Attribute | Value | Unit |" >> /tmp/README.md
@@ -528,7 +573,7 @@ jobs:
       - name: Publish Release
         uses: softprops/action-gh-release@v2
         with:
-          files: /tmp/gerber/*
+          files: /tmp/packages/*.zip
           tag_name: ${{ github.sha }}
           name: Gerber Files for ${{ github.sha }}
           body_path: /tmp/README.md
