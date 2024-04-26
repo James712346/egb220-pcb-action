@@ -353,6 +353,8 @@ jobs:
     strategy:
       matrix:
         projects: ${{fromJson(needs.setup_matrix.outputs.projects)}}
+    env:
+      extracted_text: ${{ needs.gerber_silkscreen_generation.outputs.extracted_text }}
     steps:
       - name: Format Project
         id: fproject
@@ -378,7 +380,6 @@ jobs:
           echo "boards=$boards" >> $GITHUB_OUTPUT
         env:
           project: ${{ steps.fproject.outputs.project }}
-          extracted_text: ${{ needs.gerber_silkscreen_generation.outputs.extracted_text }}
       - name: Check Boards have Team on either Top or Bottom
         env:
           project: ${{ steps.fproject.outputs.project }}
@@ -409,6 +410,8 @@ jobs:
     strategy:
       matrix:
         projects: ${{fromJson(needs.setup_matrix.outputs.projects)}}
+    env:
+      sizing: ${{ needs.gerber_size_generation.outputs.sizing }}
     steps:
       - name: Format Project
         id: fproject
@@ -434,7 +437,6 @@ jobs:
           echo "boards=$boards" >> $GITHUB_OUTPUT
         env:
           project: ${{ steps.fproject.outputs.project }}
-          sizing: ${{ needs.gerber_size_generation.outputs.sizing }}
       - name: Check Boards are within size limits
         if: matrix.projects != 'None'
         env:
@@ -479,9 +481,9 @@ jobs:
           done
       - name: Generate Readme for Release
         env:
-          sizing: ${{ needs.gerber_size_check.outputs.sizing }}
-          silkscreen_urls: ${{ needs.gerber_silk_check.outputs.silk_images }}
-          extracted_text: ${{ needs.gerber_silk_check.outputs.extracted_text }}
+          sizing: ${{ needs.gerber_size_generation.outputs.sizing }}
+          silkscreen_urls: ${{ needs.gerber_silkscreen_generation.outputs.silk_images }}
+          extracted_text: ${{ needs.gerber_silkscreen_generation.outputs.extracted_text }}
         run: |
           sizing=$(echo "$sizing" | jq -r '.')
           silkscreen_urls=$(echo "$silkscreen_urls" | jq -r '.')
