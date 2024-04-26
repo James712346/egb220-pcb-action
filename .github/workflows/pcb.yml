@@ -421,8 +421,10 @@ jobs:
         run: |
           boards=$(echo $boards | jq -c '.[]' | tr -d '"')
           for board in $boards; do
+            echo "getting top and bottom"
             top=$(echo $(jq -r '.["'"$project-$board-top"'"]' <<< $extracted_text) | grep -i "team")
             bottom=$(echo $(jq -r '.["'"$project-$board-bottom"'"]' <<< $extracted_text) | grep -i "team")
+            echo "Checking $top and $bottom"
             if [[ -n $top ]] || [[ -n $bottom ]]; then
               echo "Board $board has team on either top or bottom"
             else
