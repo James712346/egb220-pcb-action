@@ -286,7 +286,7 @@ jobs:
             filename=${filename%.gbo}
             echo "Generating PNG for $project-$filename"
             mkdir -p /tmp/images/$project
-            gerbv -x png -o /tmp/images/$project/$filename-bottom.png $gerber -D 1000 --mirror=X
+            gerbv -x png -o /tmp/images/$project/$filename-bottom.png $gerber -D 1000 --mirror=Y
           done
       - name: Install Tesseract OCR
         run: |
