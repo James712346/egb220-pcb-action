@@ -425,13 +425,14 @@ jobs:
             top=$(jq -r '.["'"$project-$board-top"'"]' <<< $extracted_text)
             bottom=$(jq -r '.["'"$project-$board-bottom"'"]' <<< $extracted_text) 
             echo "Grep top and bottom"
-            top=$(echo $top | grep -i -E "team")
-            bottom=$(echo $bottom | grep -i -E "team")
+            top=$(echo $top | perl -ne 'print if /team/i')
+            bottom=$(echo $bottom | perl -ne 'print if /team/i')
             echo "Checking $top and $bottom"
             if [[ -n $top ]] || [[ -n $bottom ]]; then
               echo "Board $board has team on either top or bottom"
             else
               echo "Board $board does not have team on either top or bottom"
+              exit 1
             fi
           done
   gerber_size_check:
