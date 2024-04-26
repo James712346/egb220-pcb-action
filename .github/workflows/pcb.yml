@@ -393,8 +393,9 @@ jobs:
           project=${project##*/}
           keys=$(jq -r 'keys[]' <<< $extracted_text)
           for key in $keys; do
-            if [[ $key == $project-* ]]; then
-              echo "Found $key"
+            if [[ $key == $project-*-top ]]; then
+              board=${key%-*}
+              echo $board
             fi
           done
         env:
