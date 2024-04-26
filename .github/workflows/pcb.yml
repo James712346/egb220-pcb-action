@@ -11,6 +11,7 @@ jobs:
     outputs:
       librepcb: ${{ steps.list_librepcb_projects.outputs.librepcb }}
       kicad: ${{ steps.list_kicad_projects.outputs.kicad }}
+      projects: ${{ steps.list_projects.outputs.projects }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -42,22 +43,11 @@ jobs:
             echo "kicad=$kicad" >> $GITHUB_OUTPUT
           fi
       - name: List LibrePCB and KiCAD Joiner
+        id: list_projects
         env:
           librepcb: ${{ steps.list_librepcb_projects.outputs.librepcb }}
           kicad: ${{ steps.list_kicad_projects.outputs.kicad }}
-        run: |
-          echo "librepcb=$librepcb"
-          echo "kicad=$kicad"
-          if [ "$librepcb" = '["None"]' ] && [ "$kicad" = '["None"]']; then
-            echo "No projects found"
-            exit 1
-          elif [ "$librepcb" = '["None"]' ]; then
-            echo "projects=$kicad" >> $GITHUB_OUTPUT
-          elif [ "$kicad" = '["None"]']; then
-            echo "projects=$librepcb" >> $GITHUB_OUTPUT
-          else
-            echo "projects=$(jq -n --argjson librepcb "$librepcb" --argjson kicad "$kicad" '$librepcb + $kicad')" >> $GITHUB_OUTPUT
-            echo "projects=$(jq -r tostring <<< $(jq -n --argjson librepcb "$librepcb" --argjson kicad "$kicad" '$librepcb + $kicad'))"
+        run: echo "projects=$(jq -r tostring <<< $(jq -n --argjson librepcb "$librepcb" --argjson kicad "$kicad" '$librepcb + $kicad'))" >> $GITHUB_OUTPUT
 
         
   generate_librePCB_gerber_files:
@@ -381,12 +371,27 @@ jobs:
           echo $json
           json_string=$(jq -r tostring <<< "$json")
           echo "extracted_text=$json_string" >> $GITHUB_OUTPUT
-  # gerber_silk_test_case:
-  #   needs: gerber_silk_check
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       file: 
+  gerber_silk_test_case:
+    needs: [setup_matrix, gerber_silk_check]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        projects: ${{fromJson(needs.setup_matrix.outputs.projects)}}
+    env:
+      extracted_text: ${{ needs.gerber_silk_check.outputs.extracted_text }}
+    steps:
+      - name: Format Project
+        id: fp
+        run: |
+          x=${project%.lpp}
+          echo "project=${x##*/}" >> $GITHUB_OUTPUT
+        env:
+          project: ${{ matrix.projects }}
+      - name: Team Existances
+        run: echo $project
+        env:
+          project: ${{ steps.fp.outputs.project }}
+
   publish_release:
     needs: [gerber_size_check, gerber_silk_check]
     if: always()
