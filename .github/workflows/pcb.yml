@@ -416,9 +416,8 @@ jobs:
           project: ${{ steps.fproject.outputs.project }}
           boards: ${{ steps.boards.outputs.boards }}
         run: |
-          boards=$(echo "$boards" | jq -r '.')
+          boards=$(echo $boards | jq -c '.[]' | tr -d '"')
           for board in $boards; do
-            echo $board
             top=$(jq -r '.["'"$project-$board-top"'"]' <<< $extracted_text)
             bottom=$(jq -r '.["'"$project-$board-bottom"'"]' <<< $extracted_text)
             if [[ $top == *"Team"* ]] || [[ $bottom == *"Team"* ]]; then
@@ -468,9 +467,8 @@ jobs:
           max_width_mm: ${{ env.max-width-mm }}
           max_height_mm: ${{ env.max-height-mm }}
         run: |
-          boards=$(echo "$boards" | jq -r '.')
+          boards=$(echo $boards | jq -c '.[]' | tr -d '"')
           for board in $boards; do
-            echo $board
             width=$(jq -r '.["'"$project-$board"'"].width_mm' <<< $sizing)
             height=$(jq -r '.["'"$project-$board"'"].height_mm' <<< $sizing)
             if (( $(echo "$width > $max_width_mm" | bc -l) )) || (( $(echo "$height > $max_height_mm" | bc -l) )); then
