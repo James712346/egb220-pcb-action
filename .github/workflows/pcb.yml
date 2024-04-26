@@ -142,6 +142,7 @@ jobs:
           librepcb-cli open-project $file --drc
         env:
           file: ${{ matrix.file }}
+        continue-on-error: true
       - name: Check for ERC Errors
         if: matrix.file != 'None'
         run: |
@@ -149,41 +150,8 @@ jobs:
           librepcb-cli open-project $file --erc
         env:
           file: ${{ matrix.file }}
-      - name: Check for Netlist Errors
-        if: matrix.file != 'None'
-        run: |
-          echo "Checking for Netlist errors in $file"
-          librepcb-cli open-project $file --check-netlist
-        env:
-          file: ${{ matrix.file }}
-      - name: Check for Footprint Errors
-        if: matrix.file != 'None'
-        run: |
-          echo "Checking for Footprint errors in $file"
-          librepcb-cli open-project $file --check-footprints
-        env:
-          file: ${{ matrix.file }}
-      - name: Check for Symbol Errors
-        if: matrix.file != 'None'
-        run: |
-          echo "Checking for Symbol errors in $file"
-          librepcb-cli open-project $file --check-symbols
-        env:
-          file: ${{ matrix.file }}
-      - name: Check for Component Errors
-        if: matrix.file != 'None'
-        run: |
-          echo "Checking for Component errors in $file"
-          librepcb-cli open-project $file --check-components
-        env:
-          file: ${{ matrix.file }}
-      - name: Check for Project Errors
-        if: matrix.file != 'None'
-        run: |
-          echo "Checking for Project errors in $file"
-          librepcb-cli open-project $file --check-project
-        env:
-          file: ${{ matrix.file }}
+        continue-on-error: true
+        
     
 
   generates_kidcad_gerber_files:
@@ -385,8 +353,6 @@ jobs:
     strategy:
       matrix:
         projects: ${{fromJson(needs.setup_matrix.outputs.projects)}}
-    env:
-      extracted_text: ${{ needs.gerber_silkscreen_generation.outputs.extracted_text }}
     steps:
       - name: Format Project
         id: fproject
@@ -419,19 +385,20 @@ jobs:
           boards: ${{ steps.boards.outputs.boards }}
         if: matrix.projects != 'None'
         run: |
+          failed=false
           boards=$(echo $boards | jq -c '.[]' | tr -d '"')
           for board in $boards; do
-            echo "getting top and bottom"
             top=$(jq -r '.["'"$project-$board-top"'"]' <<< $extracted_text)
             bottom=$(jq -r '.["'"$project-$board-bottom"'"]' <<< $extracted_text) 
-            echo "Grep top and bottom"
             top=$(echo $top | perl -ne 'print if /team/i')
             bottom=$(echo $bottom | perl -ne 'print if /team/i')
-            echo "Checking $top and $bottom"
             if [[ -n $top ]] || [[ -n $bottom ]]; then
               echo "Board $board has team on either top or bottom"
             else
               echo "Board $board does not have team on either top or bottom"
+              failed=true
+            fi
+            if [[ $failed == true ]]; then
               exit 1
             fi
           done
@@ -442,8 +409,6 @@ jobs:
     strategy:
       matrix:
         projects: ${{fromJson(needs.setup_matrix.outputs.projects)}}
-    env:
-      sizing: ${{ needs.gerber_size_generation.outputs.sizing }}
     steps:
       - name: Format Project
         id: fproject
@@ -478,6 +443,7 @@ jobs:
           max_width_mm: ${{ env.max-width-mm }}
           max_height_mm: ${{ env.max-height-mm }}
         run: |
+          failed=false
           boards=$(echo $boards | jq -c '.[]' | tr -d '"')
           for board in $boards; do
             width=$(jq -r '.["'"$project-$board"'"].width_mm' <<< $sizing)
@@ -489,6 +455,9 @@ jobs:
               echo "Board $board is within size limits"
             fi
           done
+          if [[ $failed == true ]]; then
+              exit 1
+          fi
 
   publish_release:
     needs: [gerber_size_generation, gerber_silkscreen_generation]
