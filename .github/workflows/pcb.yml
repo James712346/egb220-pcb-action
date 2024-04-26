@@ -410,6 +410,7 @@ jobs:
           echo "boards=$boards" >> $GITHUB_OUTPUT
         env:
           project: ${{ steps.fproject.outputs.project }}
+          extracted_text: ${{ needs.gerber_silk_check.outputs.extracted_text }}
       - name: Check Boards have Team on either Top or Bottom
         env:
           project: ${{ steps.fproject.outputs.project }}
@@ -447,19 +448,18 @@ jobs:
         run: |
           extracted_text=$(echo "$extracted_text" | jq -r '.')
           boards=$(jq -n '[]')
-          keys=$(jq -r 'keys[]' <<< $extracted_text)
+          keys=$(jq -r 'keys[]' <<< $sizing)
           for key in $keys; do 
-            echo "Key: $key"
-            if [[ $key == $project-*-top ]]; then 
+            if [[ $key == $project-* ]]; then 
               key=${key%-*}; 
               boards=$(jq -n --arg key ${key##*-} --argjson boards "$boards" '$boards + [$key]'); 
             fi; 
           done
           boards=$(jq -r tostring <<< "$boards")
-          echo $boards
           echo "boards=$boards" >> $GITHUB_OUTPUT
         env:
           project: ${{ steps.fproject.outputs.project }}
+          sizing: ${{ needs.gerber_size_generation.outputs.sizing }}
       - name: Check Boards are within size limits
         env:
           project: ${{ steps.fproject.outputs.project }}
