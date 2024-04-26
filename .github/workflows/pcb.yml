@@ -399,16 +399,13 @@ jobs:
       - name: Get Boards for project
         id: boards
         run: |
-          boards=$(jq -r '[]')
-          project=${project%.lpp}
-          project=${project##*/}
+          boards=$(jq -n '[]')
           keys=$(jq -r 'keys[]' <<< $extracted_text)
-          for key in $keys; do
-            if [[ $key == $project-*-top ]]; then
-              board=${key%-*}
-              board=${board##*-}
-              boards=$(jq -n --arg board "$board" '$boards + [$board]')
-            fi
+          for key in $keys; do 
+            if [[ $key == $project-*-top ]]; then 
+              key=${key%-*}; 
+              boards=$(jq -n --arg key ${key##*-} --argjson boards "$boards" '$boards + [$key]'); 
+            fi; 
           done
           echo "boards=$boards" >> $GITHUB_OUTPUT
         env:
@@ -448,16 +445,13 @@ jobs:
       - name: Get Boards for project
         id: boards
         run: |
-          boards=$(jq -r '[]')
-          project=${project%.lpp}
-          project=${project##*/}
-          keys=$(jq -r 'keys[]' <<< $sizing)
-          for key in $keys; do
-            if [[ $key == $project-* ]]; then
-              board=${key%-*}
-              board=${board##*-}
-              boards=$(jq -n --arg board "$board" '$boards + [$board]')
-            fi
+          boards=$(jq -n '[]')
+          keys=$(jq -r 'keys[]' <<< $extracted_text)
+          for key in $keys; do 
+            if [[ $key == $project-*-top ]]; then 
+              key=${key%-*}; 
+              boards=$(jq -n --arg key ${key##*-} --argjson boards "$boards" '$boards + [$key]'); 
+            fi; 
           done
           echo "boards=$boards" >> $GITHUB_OUTPUT
         env:
