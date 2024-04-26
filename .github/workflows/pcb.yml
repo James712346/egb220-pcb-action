@@ -488,38 +488,37 @@ jobs:
             boardname=${gerber##*/}
             boardname=${boardname%.*}
             boardname=$(echo $boardname | tr '[:upper:]' '[:lower:]')
-            echo "$project $boardname"
-            if [ ! -d /tmp/packages/$project_$boardname ]; then
-              mkdir -p /tmp/packages/$project_$boardname
+            if [ ! -d /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ') ]; then
+              mkdir -p /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')
               key=$project-$boardname
-              echo "# Project: $project, Board: $boardname" >> /tmp/packages/$project_$boardname/README.md
-              echo "## Size" >> /tmp/packages/$project_$boardname/README.md
-              echo "| Attribute | Value | Unit |" >> /tmp/packages/$project_$boardname/README.md
-              echo "|-----------|:-----:|-----:|" >> /tmp/packages/$project_$boardname/README.md
-              echo "| Width | $(echo "$sizing" | jq -r '.["'"$key"'"].width_px') | px |" >> /tmp/packages/$project_$boardname/README.md
-              echo "| Height | $(echo "$sizing" | jq -r '.["'"$key"'"].height_px') | px |" >> /tmp/packages/$project_$boardname/README.md
-              echo "| Width | $(echo "$sizing" | jq -r '.["'"$key"'"].width_inch') | inch |" >> /tmp/packages/$project_$boardname/README.md
-              echo "| Height | $(echo "$sizing" | jq -r '.["'"$key"'"].height_inch') | inch |" >> /tmp/packages/$project_$boardname/README.md
-              echo "| Width | $(echo "$sizing" | jq -r '.["'"$key"'"].width_mm') | mm |" >> /tmp/packages/$project_$boardname/README.md
-              echo "| Height | $(echo "$sizing" | jq -r '.["'"$key"'"].height_mm') | mm |" >> /tmp/packages/$project_$boardname/README.md
-              echo "| Area | $(echo "$sizing" | jq -r '.["'"$key"'"].area_inch') | inch² |" >> /tmp/packages/$project_$boardname/README.md
-              echo "| Area | $(echo "$sizing" | jq -r '.["'"$key"'"].area_mm') | mm² |" >> /tmp/packages/$project_$boardname/README.md
-              echo "| Price | \$$(echo "$sizing" | jq -r '.["'"$key"'"].price') | AUD |" >> /tmp/packages/$project_$boardname/README.md
-              echo "## Silk Screen" >> /tmp/packages/$project_$boardname/README.md
-              echo "### Top Layer" >> /tmp/packages/$project_$boardname/README.md
-              echo "![Silk Screen]($(echo "$silkscreen_urls" | jq -r '.["'"$key-top"'"]'))" >> /tmp/packages/$project_$boardname/README.md
-              echo "#### Extracted Text" >> /tmp/packages/$project_$boardname/README.md
-              echo "\`\`\`" >> /tmp/packages/$project_$boardname/README.md
-              echo "$extracted_text" | jq -r '.["'"$key-top"'"]' >> /tmp/packages/$project_$boardname/README.md
-              echo "\`\`\`" >> /tmp/packages/$project_$boardname/README.md
-              echo "### Bottom Layer" >> /tmp/packages/$project_$boardname/README.md
-              echo "![Silk Screen]($(echo "$silkscreen_urls" | jq -r '.["'"$key-bottom"'"]'))" >> /tmp/packages/$project_$boardname/README.md
-              echo "#### Extracted Text" >> /tmp/packages/$project_$boardname/README.md
-              echo "\`\`\`" >> /tmp/packages/$project_$boardname/README.md >> /tmp/packages/$project_$boardname/README.md
-              echo "$extracted_text" | jq -r '.["'"$key-bottom"'"]' >> /tmp/packages/$project_$boardname/README.md
-              echo "\`\`\`" >> /tmp/packages/$project_$boardname/README.md
+              echo "# Project: $project, Board: $boardname" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "## Size" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "| Attribute | Value | Unit |" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "|-----------|:-----:|-----:|" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "| Width | $(echo "$sizing" | jq -r '.["'"$key"'"].width_px') | px |" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "| Height | $(echo "$sizing" | jq -r '.["'"$key"'"].height_px') | px |" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "| Width | $(echo "$sizing" | jq -r '.["'"$key"'"].width_inch') | inch |" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "| Height | $(echo "$sizing" | jq -r '.["'"$key"'"].height_inch') | inch |" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "| Width | $(echo "$sizing" | jq -r '.["'"$key"'"].width_mm') | mm |" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "| Height | $(echo "$sizing" | jq -r '.["'"$key"'"].height_mm') | mm |" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "| Area | $(echo "$sizing" | jq -r '.["'"$key"'"].area_inch') | inch² |" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "| Area | $(echo "$sizing" | jq -r '.["'"$key"'"].area_mm') | mm² |" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "| Price | \$$(echo "$sizing" | jq -r '.["'"$key"'"].price') | AUD |" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "## Silk Screen" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "### Top Layer" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "![Silk Screen]($(echo "$silkscreen_urls" | jq -r '.["'"$key-top"'"]'))" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "#### Extracted Text" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "\`\`\`" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "$extracted_text" | jq -r '.["'"$key-top"'"]' >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "\`\`\`" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "### Bottom Layer" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "![Silk Screen]($(echo "$silkscreen_urls" | jq -r '.["'"$key-bottom"'"]'))" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "#### Extracted Text" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "\`\`\`" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "$extracted_text" | jq -r '.["'"$key-bottom"'"]' >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
+              echo "\`\`\`" >> /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/README.md
             fi
-            mv $gerber /tmp/packages/$group_name_$project_$boardname/
+            mv $gerber /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ')/
           done
           
           
