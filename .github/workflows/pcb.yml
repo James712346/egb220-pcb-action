@@ -348,7 +348,7 @@ jobs:
             filename=${filename%.png}
             echo "Extracting text from $project-$filename"
             tesseract $image /tmp/images/$project/$filename --dpi 1000 --psm 11 --oem 0
-            text=$(cat /tmp/images/$project/$filename.txt) | tr '\n\f' ' '
+            text=$(cat /tmp/images/$project/$filename.txt)
             json=$(jq --arg key "$project-$filename" --arg text "$text" '. + {($key): $text}' <<< "$json")
           done
           echo $json
