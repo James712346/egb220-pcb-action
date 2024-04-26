@@ -292,7 +292,16 @@ jobs:
             filename=${filename%.gto}
             echo "Generating PNG for $project-$filename"
             mkdir -p /tmp/images/$project
-            gerbv -x png -o /tmp/images/$project/$filename.png $gerber -D 1000
+            gerbv -x png -o /tmp/images/$project/$filename-top.png $gerber -D 1000
+          done
+          for gerber in /tmp/gerber/*/*.gbo; do
+            project=${gerber%/*}
+            project=${project##*/}
+            filename=${gerber##*/}
+            filename=${filename%.gbo}
+            echo "Generating PNG for $project-$filename"
+            mkdir -p /tmp/images/$project
+            gerbv -x png -o /tmp/images/$project/$filename-bottom.png $gerber -D 1000
           done
       - name: Install Tesseract OCR
         run: |
@@ -403,10 +412,17 @@ jobs:
             echo "| Area | $(echo "$sizing" | jq -r '.["'"$key"'"].area_mm') | mm² |" >> /tmp/README.md
             echo "| Price | \$$(echo "$sizing" | jq -r '.["'"$key"'"].price') | AUD |" >> /tmp/README.md
             echo "### Silk Screen" >> /tmp/README.md
-            echo "![Silk Screen]($(echo "$silkscreen_urls" | jq -r '.["'"$key"'"]'))" >> /tmp/README.md
-            echo "#### Extracted Text" >> /tmp/README.md
+            echo "#### Top Layer"
+            echo "![Silk Screen]($(echo "$silkscreen_urls" | jq -r '.["'"$key-top"'"]'))" >> /tmp/README.md
+            echo "##### Extracted Text" >> /tmp/README.md
             echo "\`\`\`" >> /tmp/README.md
-            echo "$extracted_text" | jq -r '.["'"$key"'"]' >> /tmp/README.md
+            echo "$extracted_text" | jq -r '.["'"$key-top"'"]' >> /tmp/README.md
+            echo "\`\`\`" >> /tmp/README.md
+            echo "#### Bottom Layer"
+            echo "![Silk Screen]($(echo "$silkscreen_urls" | jq -r '.["'"$key-bottom"'"]'))" >> /tmp/README.md
+            echo "##### Extracted Text" >> /tmp/README.md
+            echo "\`\`\`" >> /tmp/README.md
+            echo "$extracted_text" | jq -r '.["'"$key-bottom"'"]' >> /tmp/README.md
             echo "\`\`\`" >> /tmp/README.md
           done
           cat /tmp/README.md
