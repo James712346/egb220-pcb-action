@@ -41,6 +41,24 @@ jobs:
           else
             echo "kicad=$kicad" >> $GITHUB_OUTPUT
           fi
+      - name: List LibrePCB and KiCAD Joiner
+        env:
+          librepcb: ${{ steps.list_librepcb_projects.outputs.librepcb }}
+          kicad: ${{ steps.list_kicad_projects.outputs.kicad }}
+        run: |
+          echo "librepcb=$librepcb"
+          echo "kicad=$kicad"
+          if [ "$librepcb" = '["None"]' ] && [ "$kicad" = '["None"]']; then
+            echo "No projects found"
+            exit 1
+          elif [ "$librepcb" = '["None"]' ]; then
+            echo "projects=$kicad" >> $GITHUB_OUTPUT
+          elif [ "$kicad" = '["None"]']; then
+            echo "projects=$librepcb" >> $GITHUB_OUTPUT
+          else
+            echo "projects=$(jq -n --argjson librepcb "$librepcb" --argjson kicad "$kicad" '$librepcb + $kicad')" >> $GITHUB_OUTPUT
+            echo "projects=$(jq -r tostring <<< $(jq -n --argjson librepcb "$librepcb" --argjson kicad "$kicad" '$librepcb + $kicad'))"
+
         
   generate_librePCB_gerber_files:
     needs: setup_matrix
@@ -301,7 +319,7 @@ jobs:
             filename=${filename%.gbo}
             echo "Generating PNG for $project-$filename"
             mkdir -p /tmp/images/$project
-            gerbv -x png -o /tmp/images/$project/$filename-bottom.png $gerber -D 1000
+            gerbv -x png -o /tmp/images/$project/$filename-bottom.png $gerber -D 1000 --mirror=X
           done
       - name: Install Tesseract OCR
         run: |
@@ -363,6 +381,12 @@ jobs:
           echo $json
           json_string=$(jq -r tostring <<< "$json")
           echo "extracted_text=$json_string" >> $GITHUB_OUTPUT
+  # gerber_silk_test_case:
+  #   needs: gerber_silk_check
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     matrix:
+  #       file: 
   publish_release:
     needs: [gerber_size_check, gerber_silk_check]
     if: always()
