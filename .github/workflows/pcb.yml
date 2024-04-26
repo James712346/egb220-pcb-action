@@ -418,6 +418,7 @@ jobs:
         run: |
           boards=$(echo "$boards" | jq -r '.')
           for board in $boards; do
+            echo $board
             top=$(jq -r '.["'"$project-$board-top"'"]' <<< $extracted_text)
             bottom=$(jq -r '.["'"$project-$board-bottom"'"]' <<< $extracted_text)
             if [[ $top == *"Team"* ]] || [[ $bottom == *"Team"* ]]; then
@@ -469,7 +470,7 @@ jobs:
         run: |
           boards=$(echo "$boards" | jq -r '.')
           for board in $boards; do
-            echo $boards
+            echo $board
             width=$(jq -r '.["'"$project-$board"'"].width_mm' <<< $sizing)
             height=$(jq -r '.["'"$project-$board"'"].height_mm' <<< $sizing)
             if (( $(echo "$width > $max_width_mm" | bc -l) )) || (( $(echo "$height > $max_height_mm" | bc -l) )); then
