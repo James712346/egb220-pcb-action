@@ -336,7 +336,6 @@ jobs:
         id: get_imgur_urls
         if: ${{ env.imgursecret != ''}}
         run: |
-          json=$(jq -n '{}')
           json=$(jq -n '{}') # Create an empty JSON object
           IFS=', ' read -r -a urls <<< "$IMGUR_URLS"
           images=($(find /tmp/images -type f -name "*.png" | sort -n))
@@ -407,6 +406,7 @@ jobs:
               boards=$(jq -n --arg key ${key##*-} --argjson boards "$boards" '$boards + [$key]'); 
             fi; 
           done
+          boards=$(jq -r tostring <<< "$boards")
           echo "boards=$boards" >> $GITHUB_OUTPUT
         env:
           project: ${{ steps.fproject.outputs.project }}
@@ -453,6 +453,8 @@ jobs:
               boards=$(jq -n --arg key ${key##*-} --argjson boards "$boards" '$boards + [$key]'); 
             fi; 
           done
+          boards=$(jq -r tostring <<< "$boards")
+          echo $boards
           echo "boards=$boards" >> $GITHUB_OUTPUT
         env:
           project: ${{ steps.fproject.outputs.project }}
