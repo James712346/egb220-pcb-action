@@ -4,9 +4,12 @@ on:
     branches:
       - main
 env:
+  max-width-mm: 100
+  max-height-mm: 100
   price-per-square-inch: 2.5
 jobs:
   setup_matrix:
+    name: Setup Matrix
     runs-on: ubuntu-latest
     outputs:
       librepcb: ${{ steps.list_librepcb_projects.outputs.librepcb }}
@@ -51,6 +54,7 @@ jobs:
 
         
   generate_librePCB_gerber_files:
+    name: Generate Gerber Files for LibrePCB
     needs: setup_matrix
     runs-on: ubuntu-latest
     container:
@@ -118,6 +122,7 @@ jobs:
           file: ${{ matrix.file }}
     
   librePCB_checks:
+    name: Check for LibrePCB
     needs: setup_matrix
     runs-on: ubuntu-latest
     container:
@@ -182,6 +187,7 @@ jobs:
     
 
   generates_kidcad_gerber_files:
+    name: Generate Gerber Files for KiCad
     needs: setup_matrix
     runs-on: ubuntu-latest
     container:
@@ -211,7 +217,8 @@ jobs:
         env:
           file: ${{ matrix.file }}
 
-  gerber_size_check:
+  gerber_size_generation:
+    name: Generate Gerber Size Information
     needs: [generate_librePCB_gerber_files, generates_kidcad_gerber_files]
     if: always()
     runs-on: ubuntu-latest
@@ -271,7 +278,8 @@ jobs:
         env:
           price_per_square_inch: ${{ env.price-per-square-inch }}
 
-  gerber_silk_check:
+  gerber_silkscreen_generation:
+    name: Generate Gerber Silkscreen PNG and Extract Text
     needs: [generate_librePCB_gerber_files, generates_kidcad_gerber_files]
     if: always()
     runs-on: ubuntu-latest
@@ -371,8 +379,9 @@ jobs:
           echo $json
           json_string=$(jq -r tostring <<< "$json")
           echo "extracted_text=$json_string" >> $GITHUB_OUTPUT
-  gerber_silk_test_case:
-    needs: [setup_matrix, gerber_silk_check]
+  gerber_silkscreen_check:
+    name: Gerber Silkscreen Check for EGB220
+    needs: [setup_matrix, gerber_silkscreen_generation]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -381,28 +390,98 @@ jobs:
       extracted_text: ${{ needs.gerber_silk_check.outputs.extracted_text }}
     steps:
       - name: Format Project
-        id: fp
+        id: fproject
         run: |
           x=${project%.lpp}
           echo "project=${x##*/}" >> $GITHUB_OUTPUT
         env:
           project: ${{ matrix.projects }}
       - name: Get Boards for project
+        id: boards
         run: |
+          boards=$(jq -r '[]')
           project=${project%.lpp}
           project=${project##*/}
           keys=$(jq -r 'keys[]' <<< $extracted_text)
           for key in $keys; do
             if [[ $key == $project-*-top ]]; then
               board=${key%-*}
-              echo $board
+              board=${board##*-}
+              boards=$(jq -n --arg board "$board" '$boards + [$board]')
             fi
           done
+          echo "boards=$boards" >> $GITHUB_OUTPUT
         env:
-          project: ${{ steps.fp.outputs.project }}
+          project: ${{ steps.fproject.outputs.project }}
+      - name: Check Boards have Team on either Top or Bottom
+        env:
+          project: ${{ steps.fproject.outputs.project }}
+          boards: ${{ steps.boards.outputs.boards }}
+        run: |
+          for board in $boards; do
+            top=$(jq -r '.["'"$project-$board-top"'"]' <<< $extracted_text)
+            bottom=$(jq -r '.["'"$project-$board-bottom"'"]' <<< $extracted_text)
+            if [[ $top == *"Team"* ]] || [[ $bottom == *"Team"* ]]; then
+              echo "Board $board has team on either top or bottom"
+            else
+              echo "Board $board does not have team on either top or bottom"
+              exit 1
+            fi
+          done
+  gerber_size_check:
+    name: Gerber Size Check for EGB220
+    needs: [setup_matrix, gerber_size_generation]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        projects: ${{fromJson(needs.setup_matrix.outputs.projects)}}
+    env:
+      sizing: ${{ needs.gerber_size_generation.outputs.sizing }}
+    steps:
+      - name: Format Project
+        id: fproject
+        run: |
+          x=${project%.lpp}
+          echo "project=${x##*/}" >> $GITHUB_OUTPUT
+        env:
+          project: ${{ matrix.projects }}
+      - name: Get Boards for project
+        id: boards
+        run: |
+          boards=$(jq -r '[]')
+          project=${project%.lpp}
+          project=${project##*/}
+          keys=$(jq -r 'keys[]' <<< $sizing)
+          for key in $keys; do
+            if [[ $key == $project-* ]]; then
+              board=${key%-*}
+              board=${board##*-}
+              boards=$(jq -n --arg board "$board" '$boards + [$board]')
+            fi
+          done
+          echo "boards=$boards" >> $GITHUB_OUTPUT
+        env:
+          project: ${{ steps.fproject.outputs.project }}
+      - name: Check Boards are within size limits
+        env:
+          project: ${{ steps.fproject.outputs.project }}
+          boards: ${{ steps.boards.outputs.boards }}
+          max_width_mm: ${{ env.max-width-mm }}
+          max_height_mm: ${{ env.max-height-mm }}
+        run: |
+          for board in $boards; do
+            width=$(jq -r '.["'"$project-$board"'"].width_mm' <<< $sizing)
+            height=$(jq -r '.["'"$project-$board"'"].height_mm' <<< $sizing)
+            if (( $(echo "$width > $max_width_mm" | bc -l) )) || (( $(echo "$height > $max_height_mm" | bc -l) )); then
+              echo "Board $board is too large"
+              exit 1
+            else
+              echo "Board $board is within size limits"
+            fi
+          done
 
   publish_release:
-    needs: [gerber_size_check, gerber_silk_check]
+    needs: [gerber_size_generation, gerber_silkscreen_generation]
     if: always()
     runs-on: ubuntu-latest
     permissions:
