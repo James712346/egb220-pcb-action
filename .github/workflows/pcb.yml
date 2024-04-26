@@ -445,6 +445,7 @@ jobs:
       - name: Get Boards for project
         id: boards
         run: |
+          extracted_text=$(echo "$extracted_text" | jq -r '.')
           boards=$(jq -n '[]')
           keys=$(jq -r 'keys[]' <<< $extracted_text)
           for key in $keys; do 
@@ -465,6 +466,7 @@ jobs:
           max_width_mm: ${{ env.max-width-mm }}
           max_height_mm: ${{ env.max-height-mm }}
         run: |
+          boards=$(echo "$boards" | jq -r '.')
           for board in $boards; do
             width=$(jq -r '.["'"$project-$board"'"].width_mm' <<< $sizing)
             height=$(jq -r '.["'"$project-$board"'"].height_mm' <<< $sizing)
