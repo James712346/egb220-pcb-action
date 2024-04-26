@@ -410,7 +410,7 @@ jobs:
           echo "boards=$boards" >> $GITHUB_OUTPUT
         env:
           project: ${{ steps.fproject.outputs.project }}
-          extracted_text: ${{ needs.gerber_silk_check.outputs.extracted_text }}
+          extracted_text: ${{ needs.gerber_silkscreen_generation.outputs.extracted_text }}
       - name: Check Boards have Team on either Top or Bottom
         env:
           project: ${{ steps.fproject.outputs.project }}
@@ -451,7 +451,6 @@ jobs:
           keys=$(jq -r 'keys[]' <<< $sizing)
           for key in $keys; do 
             if [[ $key == $project-* ]]; then 
-              key=${key%-*}; 
               boards=$(jq -n --arg key ${key##*-} --argjson boards "$boards" '$boards + [$key]'); 
             fi; 
           done
