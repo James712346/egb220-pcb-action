@@ -252,6 +252,7 @@ jobs:
         if: matrix.file != 'None'
         with:
           config: ./tmp/kibot-config.yaml
+          dir: ./tmp/gerber/
           board: ${{ matrix.file }}
       - name: Format Name
         if: matrix.file != 'None'
