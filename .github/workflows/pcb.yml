@@ -254,14 +254,17 @@ jobs:
           config: tmp/kibot-config.yaml
           dir: tmp/gerber/
           board: ${{ matrix.file }}
-      - name: Format Name
+      - name: Format Name and archive Gerber files with no tree
         if: matrix.file != 'None'
         id: matrix_name
         run: |
           x=${file%/*}
           echo "name=${x##*/}" >> $GITHUB_OUTPUT
           echo "Naming: ${x##*/}"
-          tree .
+          cd tmp/gerber/
+          zip -r gerber.zip *
+          mv gerber.zip ../
+          
         env:
           file: ${{ matrix.file }}
       - name: Add Artifacts
@@ -269,8 +272,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{steps.matrix_name.outputs.name}}
-          path: tmp/gerber/*
+          path: tmp/gerber.zip
           retention-days: 1
+          compression-level: 0
         env:
           file: ${{ matrix.file }}
 
