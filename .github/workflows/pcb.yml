@@ -261,6 +261,9 @@ jobs:
           x=${file%/*}
           echo "name=${x##*/}" >> $GITHUB_OUTPUT
           echo "Naming: ${x##*/}"
+          ls ./tmp/gerber/
+          echo "Current Directory:"
+          ls .
         env:
           file: ${{ matrix.file }}
       - name: Add Artifacts
