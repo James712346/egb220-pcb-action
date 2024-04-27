@@ -263,8 +263,6 @@ jobs:
           echo "Naming: ${x##*/}"
           mkdir -p /tmp/gerber/
           sudo mv tmp/gerber/* /tmp/gerber/
-          sudo rm -r .
-          sudo mv /tmp/gerber/* .
         env:
           file: ${{ matrix.file }}
       - name: Add Artifacts
@@ -297,6 +295,7 @@ jobs:
       - name: Generate PNGs of Profile
         run: |
           mkdir -p /tmp/images/
+          tree /tmp/images/
           for gerber in /tmp/gerber/*/*.gm1; do
             project=${gerber%/*}
             project=${project##*/}
