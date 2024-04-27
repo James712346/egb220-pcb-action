@@ -189,19 +189,19 @@ jobs:
           echo $(pwd)
           project=${file%/*}
           project=${project##*/}
-          mkdir -p ./tmp/
-          mkdir -p ./tmp/gerber/
-          mkdir -p ./tmp/gerber/$project
+          mkdir -p $(pwd)/tmp/
+          mkdir -p $(pwd)/tmp/gerber/
+          mkdir -p $(pwd)/tmp/gerber/$project
 
           echo "Setting up KiBot Config"
-          cat <<EOF > ./tmp/kibot-config.yaml
+          cat <<EOF > $(pwd)/tmp/kibot-config.yaml
           kibot:
             version: 1
           outputs:
             - name: PCBWay_gerbers
               comment: Gerbers compatible with PCBWay
               type: gerber
-              dir: ./tmp/gerber/$project
+              dir: $(pwd)/tmp/gerber/$project
               options: &gerber_options
                 exclude_edge_layer: true
                 exclude_pads_from_silkscreen: true
@@ -233,7 +233,7 @@ jobs:
             - name: PCBWay_drill
               comment: Drill files compatible with PCBWay
               type: excellon
-              dir: ./tmp/gerber/$project
+              dir: $(pwd)/tmp/gerber/$project
               options:
                 metric_units: false
                 minimal_header: true
@@ -252,8 +252,8 @@ jobs:
         uses: INTI-CMNB/KiBot@v2_k8
         if: matrix.file != 'None'
         with:
-          config: ./tmp/kibot-config.yaml
-          dir: ./tmp/gerber/$project
+          config: $(pwd)/tmp/gerber/$project
+          dir: $(pwd)/tmp/gerber/$project
           board: ${{ matrix.file }}
       - name: Format Name
         if: matrix.file != 'None'
