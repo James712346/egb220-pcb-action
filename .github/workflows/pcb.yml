@@ -294,8 +294,8 @@ jobs:
           sudo apt-get install -y gerbv imagemagick
       - name: Generate PNGs of Profile
         run: |
-          mkdir -p /tmp/images/
-          tree /tmp/images/
+          mkdir -p /tmp/images
+          tree /tmp/gerber/
           for gerber in /tmp/gerber/*/*.gm1; do
             project=${gerber%/*}
             project=${project##*/}
