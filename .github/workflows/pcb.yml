@@ -191,7 +191,6 @@ jobs:
           project=${project##*/}
           mkdir -p $(pwd)/tmp/
           mkdir -p $(pwd)/tmp/gerber/
-          mkdir -p $(pwd)/tmp/gerber/$project
 
           echo "Setting up KiBot Config"
           cat <<EOF > $(pwd)/tmp/kibot-config.yaml
@@ -201,7 +200,7 @@ jobs:
             - name: PCBWay_gerbers
               comment: Gerbers compatible with PCBWay
               type: gerber
-              dir: $(pwd)/tmp/gerber/$project
+              dir: $(pwd)/tmp/gerber/
               options: &gerber_options
                 exclude_edge_layer: true
                 exclude_pads_from_silkscreen: true
@@ -233,7 +232,7 @@ jobs:
             - name: PCBWay_drill
               comment: Drill files compatible with PCBWay
               type: excellon
-              dir: $(pwd)/tmp/gerber/$project
+              dir: $(pwd)/tmp/gerber/
               options:
                 metric_units: false
                 minimal_header: true
@@ -258,8 +257,9 @@ jobs:
         if: matrix.file != 'None'
         id: matrix_name
         run: |
-          x=${file%.lpp}
+          x=${file%/*}
           echo "name=${x##*/}" >> $GITHUB_OUTPUT
+          echo "Naming: ${x##*/}"
         env:
           file: ${{ matrix.file }}
       - name: Add Artifacts
@@ -267,7 +267,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{steps.matrix_name.outputs.name}}
-          path: /tmp/gerber
+          path: ./tmp/gerber
           retention-days: 1
         env:
           file: ${{ matrix.file }}
