@@ -245,7 +245,7 @@ jobs:
                 npth_id: '-NPTH'
                 output: "%f%i.drl"
           EOF
-          cat /tmp/kibot-config.yaml
+          cat $(pwd)/tmp/kibot-config.yaml
         env:
           file: ${{ matrix.file }}
       - name: Generate Gerber files for KiCad
