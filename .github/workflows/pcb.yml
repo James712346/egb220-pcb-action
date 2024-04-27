@@ -189,18 +189,18 @@ jobs:
           echo $(pwd)
           project=${file%/*}
           project=${project##*/}
-          mkdir -p $(pwd)/tmp/
-          mkdir -p $(pwd)/tmp/gerber/
+          mkdir -p tmp/
+          mkdir -p tmp/gerber/
 
           echo "Setting up KiBot Config"
-          cat <<EOF > $(pwd)/tmp/kibot-config.yaml
+          cat <<EOF > tmp/kibot-config.yaml
           kibot:
             version: 1
           outputs:
             - name: PCBWay_gerbers
               comment: Gerbers compatible with PCBWay
               type: gerber
-              dir: $(pwd)/tmp/gerber/
+              dir: tmp/gerber/
               options: &gerber_options
                 exclude_edge_layer: true
                 exclude_pads_from_silkscreen: true
@@ -232,7 +232,7 @@ jobs:
             - name: PCBWay_drill
               comment: Drill files compatible with PCBWay
               type: excellon
-              dir: $(pwd)/tmp/gerber/
+              dir: tmp/gerber/
               options:
                 metric_units: false
                 minimal_header: true
@@ -244,15 +244,15 @@ jobs:
                 npth_id: '-NPTH'
                 output: "%f%i.drl"
           EOF
-          cat ./tmp/kibot-config.yaml
+          cat tmp/kibot-config.yaml
         env:
           file: ${{ matrix.file }}
       - name: Generate Gerber files for KiCad
         uses: INTI-CMNB/KiBot@v2_k8
         if: matrix.file != 'None'
         with:
-          config: ./tmp/kibot-config.yaml
-          dir: ./tmp/gerber/
+          config: tmp/kibot-config.yaml
+          dir: tmp/gerber/
           board: ${{ matrix.file }}
       - name: Format Name
         if: matrix.file != 'None'
@@ -261,9 +261,7 @@ jobs:
           x=${file%/*}
           echo "name=${x##*/}" >> $GITHUB_OUTPUT
           echo "Naming: ${x##*/}"
-          ls ./tmp/gerber/
-          echo "Current Directory:"
-          ls .
+          tree .
         env:
           file: ${{ matrix.file }}
       - name: Add Artifacts
