@@ -252,8 +252,8 @@ jobs:
         uses: INTI-CMNB/KiBot@v2_k8
         if: matrix.file != 'None'
         with:
-          config: $(pwd)/tmp/gerber/$project
-          dir: $(pwd)/tmp/gerber/$project
+          config: ./tmp/gerber/$project
+          dir: ./tmp/gerber/$project
           board: ${{ matrix.file }}
       - name: Format Name
         if: matrix.file != 'None'
