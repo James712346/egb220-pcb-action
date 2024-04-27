@@ -1,0 +1,6 @@
+(sym_lib_table
+  (lib (name "QRE1113GR")(type "KiCad")(uri "${KIPRJMOD}/QRE1113GR/QRE1113GR.kicad_sym")(options "")(descr ""))
+  (lib (name "11_Pin_Header")(type "KiCad")(uri "${KIPRJMOD}/5055671171/KiCADv6/2024-04-13_23-11-30.kicad_sym")(options "")(descr ""))
+  (lib (name "47 Ohm SMD")(type "KiCad")(uri "${KIPRJMOD}/ERJ_12ZYJ470U/KiCADv6/2024-04-15_02-25-11.kicad_sym")(options "")(descr ""))
+  (lib (name "47K Ohm SMD")(type "KiCad")(uri "${KIPRJMOD}/ERJ_2RKF4702X/KiCADv6/2024-04-15_02-25-28.kicad_sym")(options "")(descr ""))
+)
