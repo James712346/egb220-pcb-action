@@ -1,10 +1,19 @@
 name: PCB Gerber Generation
 on:
-  push:
-    branches:
-      - main
+    push:
+        branches:
+            - main
+        paths:
+            - 'schematics/**'
+            - '.github/workflows/pcb.yml'
+    pull_request:
+        paths:
+            - 'schematics/**'
+            - '.github/workflows/pcb.yml'
+            
 env:
   group_name: C8
+  project_base_path: schematics
   max-width-mm: 100
   max-height-mm: 100
   price-per-square-inch: 2.5
@@ -23,7 +32,7 @@ jobs:
       - name: List project files for LibrePCB
         id: list_librepcb_projects
         run: |
-          librepcb=$(find schematics -mindepth 1 -maxdepth 2 -name '*.lpp' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
+          librepcb=$(find $project_base_path -mindepth 1 -maxdepth 2 -name '*.lpp' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
           echo $librepcb
           if [ "$librepcb" = "[]" ]; then
             echo "No LibrePCB projects found."
@@ -36,7 +45,7 @@ jobs:
       - name: List project files for KiCad
         id: list_kicad_projects
         run: |
-          kicad=$(find schematics -mindepth 1 -maxdepth 2 -name '*.kicad_pro' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
+          kicad=$(find $project_base_path -mindepth 1 -maxdepth 2 -name '*.kicad_pcb' -type f | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
           echo $kicad
           if [ "$kicad" = "[]" ]; then
             echo "No KiCad projects found."
@@ -159,9 +168,6 @@ jobs:
     name: Generate Gerber Files for KiCad
     needs: setup_matrix
     runs-on: ubuntu-latest
-    container:
-      image: kicad/kicad:8.0
-      options: --entrypoint /bin/bash --user root
     strategy:
       matrix:
         file: ${{fromJson(needs.setup_matrix.outputs.kicad)}}
@@ -177,14 +183,87 @@ jobs:
           echo "Files: $files"
         env:
           file: ${{ matrix.file }}
-
-      - name: Generate Gerber files for KiCad
+      - name: Create KiBot Config
         if: matrix.file != 'None'
         run: |
-          echo "Generating Gerber files for $file (KiCad)"
-          # Run commands to generate Gerber files for KiCad
+          project=${file%/*}
+          project=${project##*/}
+          echo "Setting up KiBot Config"
+          cat <<EOF > /tmp/kibot-config.yaml
+          kibot:
+            version: 1
+          outputs:
+            - name: PCBWay_gerbers
+              comment: Gerbers compatible with PCBWay
+              type: gerber
+              dir: /tmp/gerber/$project
+              options: &gerber_options
+                exclude_edge_layer: true
+                exclude_pads_from_silkscreen: true
+                plot_sheet_reference: false
+                plot_footprint_refs: true
+                plot_footprint_values: true
+                force_plot_invisible_refs_vals: false
+                tent_vias: true
+                use_protel_extensions: true
+                create_gerber_job_file: false
+                output: "%f.%x"
+                gerber_precision: 4.6
+                use_gerber_x2_attributes: false
+                use_gerber_net_attributes: false
+                disable_aperture_macros: true
+                line_width: 0.1
+                subtract_mask_from_silk: false
+                inner_extension_pattern: '.gl%N'
+              layers:
+                - copper
+                - F.SilkS
+                - B.SilkS
+                - F.Mask
+                - B.Mask
+                - F.Paste
+                - B.Paste
+                - Edge.Cuts
+          
+            - name: PCBWay_drill
+              comment: Drill files compatible with PCBWay
+              type: excellon
+              dir: /tmp/gerber/$project
+              options:
+                metric_units: false
+                minimal_header: true
+                zeros_format: SUPPRESS_LEADING
+                left_digits: 3
+                right_digits: 3
+                pth_and_npth_single_file: false
+                pth_id: ''
+                npth_id: '-NPTH'
+                output: "%f%i.drl"
+          EOF
+      - name: Generate Gerber files for KiCad
+        uses: INTI-CMNB/KiBot@v2_k8
+        if: matrix.file != 'None'
+        with:
+          config: /tmp/kibot-config.yaml
+          board: ${{ matrix.file }}
+      - name: Format Name
+        if: matrix.file != 'None'
+        id: matrix_name
+        run: |
+          x=${file%.lpp}
+          echo "name=${x##*/}" >> $GITHUB_OUTPUT
         env:
           file: ${{ matrix.file }}
+      - name: Add Artifacts
+        if: matrix.file != 'None'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{steps.matrix_name.outputs.name}}
+          path: /tmp/gerber
+          retention-days: 1
+        env:
+          file: ${{ matrix.file }}
+
 
   gerber_size_generation:
     name: Generate Gerber Size Information
