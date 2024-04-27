@@ -269,7 +269,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{steps.matrix_name.outputs.name}}
-          path: tmp/gerber
+          path: tmp/gerber/*
           retention-days: 1
         env:
           file: ${{ matrix.file }}
