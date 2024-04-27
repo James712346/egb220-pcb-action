@@ -187,6 +187,7 @@ jobs:
         if: matrix.file != 'None'
         run: |
           project=${file%/*}
+          cd $project
           project=${project##*/}
           echo "Setting up KiBot Config"
           cat <<EOF > /tmp/kibot-config.yaml
@@ -241,11 +242,14 @@ jobs:
                 output: "%f%i.drl"
           EOF
           cat /tmp/kibot-config.yaml
+        env:
+          file: ${{ matrix.file }}
       - name: Generate Gerber files for KiCad
         uses: INTI-CMNB/KiBot@v2_k8
         if: matrix.file != 'None'
         with:
           config: /tmp/kibot-config.yaml
+          dir: /tmp/gerber/$project
           board: ${{ matrix.file }}
       - name: Format Name
         if: matrix.file != 'None'
