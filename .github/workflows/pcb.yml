@@ -262,7 +262,7 @@ jobs:
           echo "name=${x##*/}" >> $GITHUB_OUTPUT
           echo "Naming: ${x##*/}"
           mkdir -p /tmp/gerber/
-          mv tmp/gerber/* /tmp/gerber/
+          sudo mv tmp/gerber/* /tmp/gerber/
         env:
           file: ${{ matrix.file }}
       - name: Add Artifacts
