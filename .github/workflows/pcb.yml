@@ -245,15 +245,14 @@ jobs:
                 npth_id: '-NPTH'
                 output: "%f%i.drl"
           EOF
-          cat $(pwd)/tmp/kibot-config.yaml
+          cat ./tmp/kibot-config.yaml
         env:
           file: ${{ matrix.file }}
       - name: Generate Gerber files for KiCad
         uses: INTI-CMNB/KiBot@v2_k8
         if: matrix.file != 'None'
         with:
-          config: ./tmp/gerber/$project
-          dir: ./tmp/gerber/$project
+          config: ./tmp/kibot-config.yaml
           board: ${{ matrix.file }}
       - name: Format Name
         if: matrix.file != 'None'
