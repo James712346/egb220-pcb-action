@@ -200,7 +200,7 @@ jobs:
             - name: PCBWay_gerbers
               comment: Gerbers compatible with PCBWay
               type: gerber
-              dir: tmp/gerber/
+              dir: .
               options: &gerber_options
                 exclude_edge_layer: true
                 exclude_pads_from_silkscreen: true
@@ -232,7 +232,7 @@ jobs:
             - name: PCBWay_drill
               comment: Drill files compatible with PCBWay
               type: excellon
-              dir: tmp/gerber/
+              dir: .
               options:
                 metric_units: false
                 minimal_header: true
