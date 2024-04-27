@@ -240,6 +240,7 @@ jobs:
                 npth_id: '-NPTH'
                 output: "%f%i.drl"
           EOF
+          cat /tmp/kibot-config.yaml
       - name: Generate Gerber files for KiCad
         uses: INTI-CMNB/KiBot@v2_k8
         if: matrix.file != 'None'
