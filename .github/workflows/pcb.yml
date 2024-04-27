@@ -262,8 +262,6 @@ jobs:
           echo "name=${x##*/}" >> $GITHUB_OUTPUT
           echo "Naming: ${x##*/}"
           cd tmp/gerber/
-          zip -r gerber.zip *
-          mv gerber.zip ../
           
         env:
           file: ${{ matrix.file }}
@@ -272,9 +270,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{steps.matrix_name.outputs.name}}
-          path: tmp/gerber.zip
+          path: .
           retention-days: 1
-          compression-level: 0
         env:
           file: ${{ matrix.file }}
 
