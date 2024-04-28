@@ -577,7 +577,7 @@ jobs:
             project=${gerber%/*}
             project=${project##*/}
             boardname=${gerber##*/}
-            boardname=${boardname%-NPTH}
+            boardname=${boardname%-NPTH.drl}
             boardname=${boardname%.*}
             boardname=$(echo $boardname | tr '[:upper:]' '[:lower:]')
             if [ ! -d /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ') ]; then
