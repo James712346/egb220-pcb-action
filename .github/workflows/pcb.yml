@@ -301,6 +301,7 @@ jobs:
             project=${project##*/}
             filename=${gerber##*/}
             filename=${filename%.gm1}
+            filename=$(echo $filename | tr '[:upper:]' '[:lower:]')
             echo "Generating PNG for $project-$filename"
             mkdir -p /tmp/images/$project
             gerbv -x png -o /tmp/images/$project/$filename.png $gerber -D 1000 -B 0
@@ -314,6 +315,7 @@ jobs:
             project=${project##*/}
             filename=${image##*/}
             filename=${filename%.png}
+            filename=$(echo $filename | tr '[:upper:]' '[:lower:]')
             width=$(identify -format '%w' "$image")
             height=$(identify -format '%h' "$image")
             width_inch=$(bc <<< "scale=2; $width/1000")
@@ -366,6 +368,7 @@ jobs:
             project=${project##*/}
             filename=${gerber##*/}
             filename=${filename%.gto}
+            filename=$(echo $filename | tr '[:upper:]' '[:lower:]')
             echo "Generating PNG for $project-$filename"
             mkdir -p /tmp/images/$project
             gerbv -x png -o /tmp/images/$project/$filename-top.png $gerber -D 1000
@@ -407,6 +410,7 @@ jobs:
             project=${project##*/}
             filename=${image##*/}
             filename=${filename%.png}
+            filename=$(echo $filename | tr '[:upper:]' '[:lower:]')
             # Add project-filename: url to the JSON object
             json=$(jq --arg key "$project-$filename" --arg url "$url" '. + {($key): $url}' <<< "$json")
           done
@@ -430,6 +434,7 @@ jobs:
             project=${project##*/}
             filename=${image##*/}
             filename=${filename%.png}
+            filename=$(echo $filename | tr '[:upper:]' '[:lower:]')
             echo "Extracting text from $project-$filename"
             tesseract $image /tmp/images/$project/$filename --dpi 1000 --psm 11 --oem 0
             text=$(cat /tmp/images/$project/$filename.txt)
