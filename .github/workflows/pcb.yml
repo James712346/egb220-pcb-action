@@ -254,7 +254,7 @@ jobs:
           config: tmp/kibot-config.yaml
           dir: tmp/gerber/
           board: ${{ matrix.file }}
-      - name: Format Name and archive Gerber files with no tree
+      - name: Format Name and move gerber files to /tmp/gerber
         if: matrix.file != 'None'
         id: matrix_name
         run: |
@@ -577,6 +577,7 @@ jobs:
             project=${gerber%/*}
             project=${project##*/}
             boardname=${gerber##*/}
+            boardname=${boardname%-NPTH}
             boardname=${boardname%.*}
             boardname=$(echo $boardname | tr '[:upper:]' '[:lower:]')
             if [ ! -d /tmp/packages/$(echo "$group_name _$project _$boardname" | tr -d ' ') ]; then
